@@ -15,6 +15,10 @@
 #include <cstring>
 #include <unistd.h>
 #include <sys/select.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <arpa/inet.h>
 
 class IRCServer
 {
@@ -23,11 +27,13 @@ private:
     int port;
     std::string password;
     std::vector<int> clientSockets;
+    fd_set f;
     // IRCServer();
 public:
     IRCServer(int portNum, const std::string &pwd);
     void acceptConnections();
     void handleCommunication(int clientSocket);
+    void ProcessTheNewRequest();
     ~IRCServer();
 };
 
