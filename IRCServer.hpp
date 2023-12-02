@@ -23,18 +23,32 @@
 class IRCServer
 {
 private:
-    int serverSocket;
-    int port;
+    int s;
+    int port, idNext, fdMax;
+    fd_set	ready, fd, action; 
     std::string password;
-    std::vector<int> clientSockets;
-    fd_set f;
-    // IRCServer();
+int		clients[65000];
+    char	buffer[200100];
+    int sclient;
+    struct sockaddr_in servaddr, cli;
+    socklen_t len;
+    IRCServer();
 public:
     IRCServer(int portNum, const std::string &pwd);
     void acceptConnections();
     void handleCommunication(int clientSocket);
     void ProcessTheNewRequest();
+    void handleError(const std::string &message);
+    void setSocketNonBlocking(int socket);
+    void initializeServer();
+    void startListening();
+    void showServerInfo();
+    void handleNewRequest();
+    void	sendAll(int n);
     ~IRCServer();
+
+    //others
+    void	fterror(char *str);
 };
 
 /*

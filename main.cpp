@@ -12,7 +12,7 @@ int main(int argc, char **argv)
     std::string password = argv[2];
 
     IRCServer ircServer(port, password);
-    ircServer.acceptConnections();
+    // ircServer.acceptConnections();
 
     return 0;
 }
