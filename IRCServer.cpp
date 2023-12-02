@@ -69,9 +69,9 @@ void IRCServer::startListening()
     while (true)
     {
 
-        // struct timeval timeout;
-        // timeout.tv_sec = 1;
-        // timeout.tv_usec = 0;
+        struct timeval timeout;
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
         ready = fd = action;
         if (select(fdMax + 1, &ready, &fd, 0, 0) < 0)
             continue;
@@ -83,6 +83,7 @@ void IRCServer::startListening()
             FD_SET(sclient, &action);
             sprintf(buffer, "server: client %d just arrived\n", idNext);
             clients[sclient] = idNext++;
+            setSocketNonBlocking(sclient);
             sendAll(sclient);
             fdMax = sclient > fdMax ? sclient : fdMax;
             continue;
@@ -109,42 +110,8 @@ void IRCServer::startListening()
         }
     }
 }
-// void IRCServer::handleNewRequest()
-// {
-//     struct sockaddr_in clientAddress;
-//     socklen_t clientAddrLen = sizeof(clientAddress);
 
-//     int newClientSocket = accept(s, (struct sockaddr *)&clientAddress, &clientAddrLen);
-//     if (newClientSocket < 0)
-//     {
-//         std::cerr << "Error accepting connection" << std::endl;
-//         return;
-//     }
 
-//     setSocketNonBlocking(newClientSocket);
-//     clientSockets.push_back(newClientSocket);
-//     handleCommunication(newClientSocket);
-// }
-
-// void IRCServer::handleCommunication(int clientSocket)
-// {
-//     char buffer[1024];
-//     int bytesRead;
-//     std::cout << 36;
-//     bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
-
-//     if (bytesRead > 0)
-//     {
-//         // Broadcast the message to all clients except the sender
-//         for (size_t i = 0; i < clientSockets.size(); ++i)
-//         {
-//             if (clientSockets[i] != clientSocket)
-//             {
-//                 send(clientSockets[i], "hi", 2, 0);
-//             }
-//         }
-//     }
-// }
 
 void IRCServer::showServerInfo()
 {
@@ -188,10 +155,10 @@ IRCServer::~IRCServer()
 {
     close(s);
 
-    // for (size_t i = 0; i < clientSockets.size(); ++i)
-    // {
-    //     close(clientSockets[i]);
-    // }
+    for (size_t i = 0; i < sizeof(clients); ++i)
+    {
+        close(clients[i]);
+    }
 }
 
 void	IRCServer::sendAll(int n)
