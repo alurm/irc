@@ -1,5 +1,0 @@
-#!/bin/sh
-tmp=$(mktemp -t ps) || exit 1
-man -t "$@" > "$tmp" || exit 1
-open "$tmp"
-# rm "$tmp"
