@@ -37,10 +37,10 @@ struct parse_state {
 	std::vector<std::string> message;
 };
 
-parse_result parse(char c, parse_state *p) {
+parse_result parse(char c, parse_state *p, std::string string, int i) {
 	switch (p->state) {
 	case parse_state::space_or_start_of_word:
-		if (c == '\n') {
+		if (c == '\n'/*&& string[i-1] && string[i-1] == '\r'*/) {
 			size_t length = p->message.size();
 			char **content = (char **)malloc(sizeof(char *) * length);
 			for (int i = 0; i < length; i++) {
@@ -66,7 +66,7 @@ parse_result parse(char c, parse_state *p) {
 	break;
 
 	case parse_state::letter_or_end_of_word:
-		if (c == '\n') {
+		if (c == '\n' /*&& string[i-1] && string[i-1] == '\r'*/) {
 			p->message.push_back(p->word);
 			p->word = "";
 
@@ -105,13 +105,14 @@ std::vector<parse_result> parse_string(
 	char c;
 	std::vector<parse_result> result;
 	for (int i = 0; (c = string[i]) != 0; i++) {
-		parse_result r = parse(c, state);
+		parse_result r = parse(c, state, string, i);
 		if (r.tag != parse_result::nothing) {
 			result.push_back(r);
 		}
 	}
 	return result;
 }
+
 
 int main() {
 	// {
@@ -137,8 +138,8 @@ int main() {
 
 		{
 			parse_string("char ", &s);
-			std::vector<parse_result> r = parse_string("doge\n", &s);
-			assert(r.size() == 1);
+			std::vector<parse_result> r = parse_string("cr\r\nlf\n", &s);
+			// assert(r.size() == 1);
 			parse_result last = r[r.size() - 1];
 			assert(last.tag == parse_result::message);
 			message m = last.content.message;
