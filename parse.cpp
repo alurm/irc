@@ -7,21 +7,24 @@
 
 // Lexer.
 
+namespace lex_error {
+	enum type {
+		carriage_return_or_line_feed,
+		nil,
+	};
+}
+
 struct lexeme {
-	enum lexeme_tag {
+	enum {
 		carriage_return_line_feed,
 		word,
 
 		error,
 		nothing,
-
-		// Errors. To-do: find a better way.
-		error_carriage_return_or_line_feed,
-		error_nil,
 	} tag;
 	union {
 		char *word;
-		lexeme_tag error;
+		lex_error::type error;
 	} value;
 };
 
@@ -39,12 +42,12 @@ lexeme lex(char c, lex_state *l) {
 	if (c == 0)
 		return (lexeme){
 		    .tag = lexeme::error,
-		    .value.error = lexeme::error_nil,
+		    .value.error = lex_error::nil,
 		};
 	if (c == '\n' && l->state != lex_state::carriage_return_found) {
 		return (lexeme){
 		    .tag = lexeme::error,
-		    .value.error = lexeme::error_carriage_return_or_line_feed,
+		    .value.error = lex_error::carriage_return_or_line_feed,
 		};
 	}
 
@@ -68,7 +71,7 @@ lexeme lex(char c, lex_state *l) {
 			return (lexeme){
 			    .tag = lexeme::error,
 			    .value.error =
-				lexeme::error_carriage_return_or_line_feed,
+				lex_error::carriage_return_or_line_feed,
 			};
 		}
 		if (c == ' ') {
@@ -127,18 +130,20 @@ struct message {
 	int params_count;
 };
 
+namespace parse_error {
+	enum type {
+	};
+}
+
 struct parseme {
 	enum parseme_tag {
 		nothing,
 		message,
 		error,
-
-		// Errors. To-do: find a better way.
-		// (To-do.)
 	} tag;
 	union {
 		::message message;
-		parseme_tag error;
+		parse_error::type error;
 	} value;
 };
 
