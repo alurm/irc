@@ -13,37 +13,66 @@ int main() {
 		       &state);
 
 	{
-		lexeme l = lexemes[0];
-		assert(l.tag == lexeme::word &&
-		       strcmp(l.value.word,
-			      ":Nickname!username@hostname.com") == 0);
+		{
+			lexeme l = lexemes[0];
+			assert(l.tag == lexeme::word &&
+			       strcmp(l.value.word,
+				      ":Nickname!username@hostname.com") == 0);
+		}
+
+		{
+			lexeme l = lexemes[1];
+			assert(l.tag == lexeme::word &&
+			       strcmp(l.value.word, "PRIVMSG") == 0);
+		}
+
+		{
+			lexeme l = lexemes[2];
+			assert(l.tag == lexeme::word &&
+			       strcmp(l.value.word, "#channel") == 0);
+		}
+
+		{
+			lexeme l = lexemes[3];
+			assert(l.tag == lexeme::word &&
+			       strcmp(l.value.word,
+				      "Hello everyone! How are you today?") ==
+				   0);
+		}
+
+		{
+			lexeme l = lexemes[4];
+			assert(l.tag == lexeme::carriage_return_line_feed);
+		}
+
+		assert(lexemes.size() == 5);
+
+		printf("lex test: ok\n");
 	}
 
 	{
-		lexeme l = lexemes[1];
-		assert(l.tag == lexeme::word &&
-		       strcmp(l.value.word, "PRIVMSG") == 0);
-	}
+		parse_state p = {
+		    .prefix =
+			{
+			    .has_value = false,
+			},
+		};
 
-	{
-		lexeme l = lexemes[2];
-		assert(l.tag == lexeme::word &&
-		       strcmp(l.value.word, "#channel") == 0);
-	}
+		std::vector<parseme> parsemes =
+		    parse_lexeme_string(lexemes, &p);
 
-	{
-		lexeme l = lexemes[3];
-		assert(l.tag == lexeme::word &&
-		       strcmp(l.value.word,
+		assert(parsemes.size() == 1 &&
+		       parsemes[0].tag == parseme::message);
+
+		message m = parsemes[0].value.message;
+
+		assert(strcmp(m.prefix, "Nickname!username@hostname.com") == 0);
+		assert(strcmp(m.command, "PRIVMSG") == 0);
+		assert(m.params_count == 2);
+		assert(strcmp(m.params[0], "#channel") == 0);
+		assert(strcmp(m.params[1],
 			      "Hello everyone! How are you today?") == 0);
+
+		printf("parse test: ok\n");
 	}
-
-	{
-		lexeme l = lexemes[4];
-		assert(l.tag == lexeme::carriage_return_line_feed);
-	}
-
-	assert(lexemes.size() == 5);
-
-	printf("ok\n");
 }
