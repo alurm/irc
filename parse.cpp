@@ -1,8 +1,8 @@
+#include <assert.h>
+#include <iostream>
 #include <stddef.h>
 #include <stdio.h>
 #include <string>
-#include <iostream>
-#include <assert.h>
 #include <vector>
 
 // Lexer.
@@ -36,37 +36,39 @@ struct lex_state {
 };
 
 lexeme lex(char c, lex_state *l) {
-	if (c == 0) return (lexeme){
-		.tag = lexeme::error,
-		.value.error = lexeme::error_nil,
-	};
+	if (c == 0)
+		return (lexeme){
+		    .tag = lexeme::error,
+		    .value.error = lexeme::error_nil,
+		};
 	if (c == '\n' && l->state != lex_state::carriage_return_found) {
 		return (lexeme){
-			.tag = lexeme::error,
-			.value.error = lexeme::error_carriage_return_or_line_feed,
+		    .tag = lexeme::error,
+		    .value.error = lexeme::error_carriage_return_or_line_feed,
 		};
 	}
 
 	switch (l->state) {
 	case lex_state::carriage_return_found:
-		return (lexeme){ .tag = lexeme::carriage_return_line_feed };
-	break;
+		return (lexeme){.tag = lexeme::carriage_return_line_feed};
+		break;
 	case lex_state::in_word:
 		if (l->in_trailing) {
 			if (c == '\r') {
 				l->state = lex_state::carriage_return_found;
 				return (lexeme){
-					.tag = lexeme::word,
-					.value.word = strdup(l->word.c_str()),
+				    .tag = lexeme::word,
+				    .value.word = strdup(l->word.c_str()),
 				};
 			}
 			l->word += c;
-			return (lexeme){ .tag = lexeme::nothing };
+			return (lexeme){.tag = lexeme::nothing};
 		}
 		if (c == '\r') {
 			return (lexeme){
-				.tag = lexeme::error,
-				.value.error = lexeme::error_carriage_return_or_line_feed,
+			    .tag = lexeme::error,
+			    .value.error =
+				lexeme::error_carriage_return_or_line_feed,
 			};
 		}
 		if (c == ' ') {
@@ -74,38 +76,35 @@ lexeme lex(char c, lex_state *l) {
 			char *word = strdup(l->word.c_str());
 			l->word = "";
 			return (lexeme){
-				.tag = lexeme::word,
-				.value.word = word,
+			    .tag = lexeme::word,
+			    .value.word = word,
 			};
 		}
 		l->word += c;
-		return (lexeme){ .tag = lexeme::nothing };
-	break;
+		return (lexeme){.tag = lexeme::nothing};
+		break;
 	case lex_state::out_of_word:
 		if (c == ':') {
 			l->in_trailing = true;
 			l->state = lex_state::in_word;
-			return (lexeme){ .tag = lexeme::nothing };
+			return (lexeme){.tag = lexeme::nothing};
 		}
 		if (c == ' ') {
-			return (lexeme){ .tag = lexeme::nothing };
+			return (lexeme){.tag = lexeme::nothing};
 		}
 		if (c == '\r') {
 			l->state = lex_state::carriage_return_found;
-			return (lexeme){ .tag = lexeme::nothing };
+			return (lexeme){.tag = lexeme::nothing};
 		}
 		l->state = lex_state::in_word;
 		l->word += c;
-		return (lexeme){ .tag = lexeme::nothing };
-	break;
+		return (lexeme){.tag = lexeme::nothing};
+		break;
 	}
 	assert(0);
 }
 
-std::vector<lexeme> lex_string(
-	const char *string,
-	lex_state *state
-) {
+std::vector<lexeme> lex_string(const char *string, lex_state *state) {
 	std::vector<lexeme> result;
 
 	for (int i = 0; string[i] != 0; i++) {
