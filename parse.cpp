@@ -133,15 +133,11 @@ struct message {
 };
 
 void print_message(message m) {
-	std::cout
-		<< "prefix: " << m.prefix << std::endl
-		<< "command: " << m.command << std::endl
-		<< "params_count: " << m.params_count << std::endl
-	;
+	std::cout << "prefix: " << m.prefix << std::endl
+		  << "command: " << m.command << std::endl
+		  << "params_count: " << m.params_count << std::endl;
 	for (int i = 0; i < m.params_count; i++) {
-		std::cout
-			<< "\t" << m.params[i] << std::endl
-		;
+		std::cout << "\t" << m.params[i] << std::endl;
 	}
 }
 
@@ -202,7 +198,7 @@ parseme parse(lexeme l, parse_state *p) {
 			assert(m.params[i] != 0);
 		}
 		p->prefix = (optional<std::string>){
-			.has_value = false,
+		    .has_value = false,
 		};
 		p->words.erase(p->words.begin(), p->words.end());
 		return (parseme){
@@ -219,27 +215,26 @@ parseme parse(lexeme l, parse_state *p) {
 			char *without_colon = word + 1;
 			assert(without_colon != 0);
 			p->prefix = (optional<std::string>){
-				.has_value = true,
-				.value = without_colon,
+			    .has_value = true,
+			    .value = without_colon,
 			};
 			free(word);
-			return (parseme){ .tag = parseme::nothing };
+			return (parseme){.tag = parseme::nothing};
 		} else {
 			p->words.push_back(word);
 			free(word);
-			return (parseme){ .tag = parseme::nothing };
+			return (parseme){.tag = parseme::nothing};
 		}
 		break;
 	}
 	default:
+		// To-do: handle errors.
 		assert(0);
 	}
 }
 
-std::vector<parseme> parse_lexeme_string(
-	std::vector<lexeme> lexemes,
-	parse_state *state
-) {
+std::vector<parseme> parse_lexeme_string(std::vector<lexeme> lexemes,
+					 parse_state *state) {
 	std::vector<parseme> result;
 
 	for (unsigned long i = 0; i < lexemes.size(); i++) {

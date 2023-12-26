@@ -1,0 +1,2 @@
+Is uncaught exception a crash? If yes, then replace malloc with new and handle std::bad_alloc somehow.
+Pick a compliant client.

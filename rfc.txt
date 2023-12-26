@@ -239,6 +239,8 @@ RFC 1459              Internet Relay Chat Protocol              May 1993
    that the client is running on, the username of the client on that
    host, and the server to which the client is connected.
 
+<username> <hostname> <servername> <realname>
+
 1.2.1 Operators
 
    To allow a reasonable amount of order to be kept within the IRC
@@ -274,19 +276,12 @@ RFC 1459              Internet Relay Chat Protocol              May 1993
    (^G or ASCII 7), or a comma (',' which is used as a list item
    separator by the protocol).
 
-   There are two types of channels allowed by this protocol.  One is a
-   distributed channel which is known to all the servers that are
-
-
-
-Oikarinen & Reed                                                [Page 5]
-
-RFC 1459              Internet Relay Chat Protocol              May 1993
-
-
+   There are two types of channels allowed by this protocol.  One is a Expand
+   distributed channel, which is known to all the servers that are
    connected to the network. These channels are marked by the first
-   character being a only clients on the server where it exists may join
-   it.  These are distinguished by a leading '&' character.  On top of
+   character being a '#'.  The other type of channel is limited to one
+   server, and only clients on the server where it exists may join
+   it.  These channels are distinguished by a leading '&' character.  On top of
    these two types, there are the various channel modes available to
    alter the characteristics of individual channels.  See section 4.2.3
    (MODE command) for more details on this.
