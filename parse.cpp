@@ -126,7 +126,7 @@ std::vector<lexeme> lex_string(const char *string, lex_state *state) {
 // Parser.
 
 struct message {
-	char *prefix; // Nilable.
+	char *prefix; // Nilable. Unused.
 	char *command;
 	char **params;
 	int params_count;
