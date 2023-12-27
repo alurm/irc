@@ -2,5 +2,5 @@
 
 .PHONY : test
 test :
-	c++ -std=c++98 -W{all,extra,error} -g -fsanitize=undefined test_parse.cpp -o test
+	c++ -std=c++98 -W{all,extra,error} -g -fsanitize=undefined test.cpp -o test
 	./test

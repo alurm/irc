@@ -1,6 +1,9 @@
 #include "parse.cpp"
+#include "dispatch.cpp"
 
 int main() {
+	// Lex.
+
 	lex_state state = {
 	    .state = lex_state::in_word,
 	    .word = "",
@@ -50,6 +53,8 @@ int main() {
 		printf("lex test: ok\n");
 	}
 
+	// Parse.
+
 	{
 		parse_state p = {
 		    .prefix =
@@ -75,4 +80,50 @@ int main() {
 
 		printf("parse test: ok\n");
 	}
+
+	// // Dispatch.
+
+	// {
+		// server s = {
+			// .password = const_cast<char *>("234"),
+		// };
+
+		// {
+			// client c = { .state = client::unregistered };
+
+			// assert(dispatch(
+				// &s,
+				// &c,
+				// (message){
+					// .command = const_cast<char *>("PASS"),
+					// .params = const_cast<char **>((const char *[]){
+						// "123",
+					// }),
+					// .params_count = 1,
+				// }
+			// ).has_value == false);
+		// }
+
+		// {
+			// client c = { .state = client::registered };
+
+			// optional<message> om = dispatch(
+				// &s,
+				// &c,
+				// (message){
+					// .command = const_cast<char *>("PASS"),
+					// .params = const_cast<char **>((const char *[]){
+						// "123",
+					// }),
+					// .params_count = 1,
+				// }
+			// );
+
+			// assert(om.has_value);
+
+			// assert(strcmp(om.value.command, ERR_ALREADYREGISTRED) == 0);
+		// }
+
+		// printf("dispatch test: ok\n");
+	// }
 }
