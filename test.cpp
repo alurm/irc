@@ -11,8 +11,7 @@ int main() {
 	};
 
 	std::vector<lexeme> lexemes =
-	    lex_string(":Nickname!username@hostname.com PRIVMSG #channel "
-		       ":Hello everyone! How are you today?\r\n",
+	    lex_string(":Nickname!username@hostname.com PRIVMSG #channel :Hello everyone! How are you today?\r\n",
 		       &state);
 
 	{

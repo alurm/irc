@@ -11,7 +11,9 @@
 #include <netdb.h>
 #include <map>
 #include "Client.hpp"
-
+#include <unistd.h>
+#include "Channel.hpp"
+#include "Parser.hpp"
 #define MAX_CLIENTS 100
 
 class Server {
@@ -23,12 +25,14 @@ class Server {
 		const std::string       pass;
         std::vector<pollfd>     fds;
 		std::map<int, Client *> clients;
-
+		std::vector<Client> 	channels;
 	public:
 		Server(const std::string &port, const std::string &pass);
 		~Server();
 		int		initialize_socket();
 		void	start();
-		void	disconnect_client();
+		void	disconnect_client(int fd);
 		void	connect_client();
+		void    handle_client_message(int fd);
+		struct message get_client_message(int fd);
 };

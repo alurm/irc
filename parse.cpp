@@ -1,3 +1,4 @@
+#include "Parser.hpp"
 #include <assert.h>
 #include <iostream>
 #include <stddef.h>
@@ -7,36 +8,36 @@
 
 // Lexer.
 
-namespace lex_error {
-enum type {
-	carriage_return_or_line_feed,
-	nil,
-};
-}
+// namespace lex_error {
+// enum type {
+// 	carriage_return_or_line_feed,
+// 	nil,
+// };
+// }
 
-struct lexeme {
-	enum {
-		carriage_return_line_feed,
-		word,
+// struct lexeme {
+// 	enum {
+// 		carriage_return_line_feed,
+// 		word,
 
-		error,
-		nothing,
-	} tag;
-	union {
-		char *word;
-		lex_error::type error;
-	} value;
-};
+// 		error,
+// 		nothing,
+// 	} tag;
+// 	union {
+// 		char *word;
+// 		lex_error::type error;
+// 	} value;
+// };
 
-struct lex_state {
-	enum {
-		in_word,
-		out_of_word,
-		carriage_return_found,
-	} state;
-	std::string word;
-	bool in_trailing;
-};
+// struct lex_state {
+// 	enum {
+// 		in_word,
+// 		out_of_word,
+// 		carriage_return_found,
+// 	} state;
+// 	std::string word;
+// 	bool in_trailing;
+// };
 
 lexeme lex(char c, lex_state *l) {
 	if (c == 0)
@@ -125,12 +126,12 @@ std::vector<lexeme> lex_string(const char *string, lex_state *state) {
 
 // Parser.
 
-struct message {
-	char *prefix; // Nilable. Unused.
-	char *command;
-	char **params;
-	int params_count;
-};
+// struct message {
+// 	char *prefix; // Nilable. Unused.
+// 	char *command;
+// 	char **params;
+// 	int params_count;
+// };
 
 void print_message(message m) {
 	std::cout << "prefix: " << m.prefix << std::endl
@@ -141,33 +142,33 @@ void print_message(message m) {
 	}
 }
 
-namespace parse_error {
-enum type {
-	no_command,
-};
-}
+// namespace parse_error {
+// enum type {
+// 	no_command,
+// };
+// }
 
-struct parseme {
-	enum parseme_tag {
-		nothing,
-		message,
-		error,
-	} tag;
-	union {
-		::message message;
-		parse_error::type error;
-	} value;
-};
+// struct parseme {
+// 	enum parseme_tag {
+// 		nothing,
+// 		message,
+// 		error,
+// 	} tag;
+// 	union {
+// 		::message message;
+// 		parse_error::type error;
+// 	} value;
+// };
 
-template <class t> struct optional {
-	t value;
-	bool has_value;
-};
+// template <class t> struct optional {
+// 	t value;
+// 	bool has_value;
+// };
 
-struct parse_state {
-	optional<std::string> prefix;
-	std::vector<std::string> words;
-};
+// struct parse_state {
+// 	optional<std::string> prefix;
+// 	std::vector<std::string> words;
+// };
 
 parseme parse(lexeme l, parse_state *p) {
 	switch (l.tag) {
@@ -227,9 +228,9 @@ parseme parse(lexeme l, parse_state *p) {
 		}
 		break;
 	}
-	default:
+	// default:
 		// To-do: handle errors.
-		assert(0);
+		// assert(0);
 	}
 }
 
