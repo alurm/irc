@@ -35,6 +35,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 
+#include "Parser.hpp"
+
 int main() {
     const char *ipAddress = "192.168.1.1";
     struct in_addr ipv4Addr;

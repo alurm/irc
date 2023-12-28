@@ -228,9 +228,9 @@ parseme parse(lexeme l, parse_state *p) {
 		}
 		break;
 	}
-	// default:
+	default:
 		// To-do: handle errors.
-		// assert(0);
+		assert(0);
 	}
 }
 

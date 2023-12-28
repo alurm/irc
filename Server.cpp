@@ -1,7 +1,7 @@
 #include "Server.hpp"
 #include "Client.hpp"
-Server::Server(const std::string &port, const std::string &pass) 
-    : host("127.0.0.1"), port(port), pass(pass)
+Server::Server(const std::string &port, const std::string &pass)
+    : port(port), host("127.0.0.1"), pass(pass)
 {
     running = 1;
     sock = initialize_socket();
@@ -39,7 +39,7 @@ int Server::initialize_socket() {
 }
 
 
-Server::~Server() 
+Server::~Server()
 {
     // for (size_t i = 0; i < _channels.size(); i++)
     //     delete _clients[i];
@@ -78,10 +78,10 @@ void	Server::disconnect_client(int fd)
 
     Client* client = clients.at(fd);
 
-    //leave client 
+    //leave client
     /*TODO leave function*/
-    //client->leave() leave from channel 
-        clients.erase(fd);    
+    //client->leave() leave from channel
+        clients.erase(fd);
         std::vector<pollfd>::iterator it_b = fds.begin();
         std::vector<pollfd>::iterator it_e = fds.end();
         while (it_b != it_e) {
@@ -153,11 +153,11 @@ void    Server::handle_client_message(int fd)
     std::cout << "here\n";
     try
     {
-        Client*     client = clients.at(fd);
+        Client*     client = clients.at(fd); (void)client;
         struct message message = this->get_client_message(fd);
         std::cout << "hmmmmm ->> " << message.prefix << std::endl;
     }
-    catch (const std::exception& e) 
+    catch (const std::exception& e)
     {
         std::cout << "Error while handling the client message! " << e.what() << std::endl;
     }
@@ -177,7 +177,7 @@ void Server::start() {
 
         for (it = fds.begin(); it != fds.end(); ++it) {
             if (it->revents == 0) {
-                continue; 
+                continue;
             }
 
             if (it->revents & POLLHUP) {
@@ -189,7 +189,7 @@ void Server::start() {
                 if (it->fd == sock) {
                     connect_client();
                     break;
-                } 
+                }
             }
             handle_client_message(it->fd);
         }
