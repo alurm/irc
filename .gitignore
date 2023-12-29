@@ -3,3 +3,4 @@
 /test
 *.dSYM
 *.o
+*.d

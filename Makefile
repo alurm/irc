@@ -2,13 +2,30 @@
 
 cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
 
-test : test.cpp Makefile
-	c++ $(cpp_flags) test.cpp -o test
+test : $(addprefix objects/, $(addsuffix .o, test)) Makefile
+	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
-validation : validation.cpp Server.cpp parse.cpp Client.cpp Makefile
-	c++ $(cpp_flags) $(filter %.cpp, $^) -o $@
+validation : $(addprefix objects/, $(addsuffix .o, validation Server parse Client)) Makefile
+	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
-%.d : %.cpp
-	@ c++ -M -MM -MP $^ > $@
+objects/%.o : %.cpp Makefile
+	c++ $(cpp_flags) -c -o $@ $<
 
--include validation.d
+generated_makefiles/%.mk : %.cpp Makefile
+	c++ \
+		$(cpp_flags) \
+		-M `# Generate a makefile` \
+		-MM `# Don't mention system dependencies` \
+		-MP `# Make a phony target for all headers` \
+		$< > $@ \
+	;
+
+sources_without_extension := Client Server after_parsing_stub dispatch m parse test validation
+generated_makefiles := $(addprefix generated_makefiles/, $(addsuffix .mk, $(sources_without_extension)))
+objects := $(addprefix objects/, $(addsuffix .o, $(sources_without_extension)))
+
+.PHONY : clean
+clean :
+	rm -f $(generated_makefiles) $(objects)
+
+-include $(generated_makefiles)
