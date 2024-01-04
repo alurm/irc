@@ -37,5 +37,12 @@ class Server {
 		struct message get_client_message(int fd);
 
 
-		
+		std::string     getPassword() const;
+        Client*         getClient(const std::string &nickname);
+        Channel*        getChannel(const std::string &name);
+
+
+
+		Channel*        add_channel(const std::string &name, const std::string &key, Client *client);
+
 };
