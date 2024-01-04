@@ -1,7 +1,5 @@
-test.o: test.cpp dispatch.cpp parse.cpp Parser.hpp
+test.o: test.cpp dispatch.cpp Parser.hpp
 
 dispatch.cpp:
-
-parse.cpp:
 
 Parser.hpp:

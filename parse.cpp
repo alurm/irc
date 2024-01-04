@@ -40,17 +40,17 @@
 // };
 
 lexeme lex(char c, lex_state *l) {
-	// if (c == 0)
-	// 	return (lexeme){
-	// 	    .tag = lexeme::error,
-	// 	    .value.error = lex_error::nil,
-	// 	};
-	// if (c == '\n' && l->state != lex_state::carriage_return_found) {
-	// 	return (lexeme){
-	// 	    .tag = lexeme::error,
-	// 	    .value.error = lex_error::carriage_return_or_line_feed,
-	// 	};
-	// }
+	if (c == 0)
+		return (lexeme){
+		    .tag = lexeme::error,
+		    .value.error = lex_error::nil,
+		};
+	if (c == '\n' && l->state != lex_state::carriage_return_found) {
+		return (lexeme){
+		    .tag = lexeme::error,
+		    .value.error = lex_error::carriage_return_or_line_feed,
+		};
+	}
 
 	switch (l->state) {
 	case lex_state::carriage_return_found:
@@ -118,9 +118,9 @@ std::vector<lexeme> lex_string(const char *string, lex_state *state) {
 	for (int i = 0; string[i] != 0; i++) {
 		char c = string[i];
 		lexeme l = lex(c, state);
-		// if (l.tag != lexeme::nothing) {
+		if (l.tag != lexeme::nothing) {
 			result.push_back(l);
-		// }
+		}
 	}
 	return result;
 }

@@ -120,6 +120,13 @@ struct message Server::get_client_message(int fd) {
     message.append(buffer);
         
     std::cout << "message is " << message << std::endl;
+    std::cout << "bull" << (message.back() == '\n') << std::endl;
+    size_t lastNewlinePos = message.find_last_of('\n');
+    if (lastNewlinePos != std::string::npos) {
+        message.replace(lastNewlinePos, 1, "\r\n");
+    }
+    std::cout << "Modified message is " << message << std::endl;
+    std::string simulated_message = ":Nickname!username@hostname.com PRIVMSG #channel :Hello everyone! How are you today?\r\n";
     lex_state lexerState = {
         .state = lex_state::in_word,
         .word = "",
@@ -138,7 +145,6 @@ struct message Server::get_client_message(int fd) {
     std::vector<parseme> parsedMessages = parse_lexeme_string(lexemes, &parserState);
     if (!parsedMessages.empty()) {
         std::cout << "}}}}\n";
-        std::cout << ">>>>>>>>>" << parsedMessages[0].value.message.prefix << std::endl;
         for (size_t i = 0; i < parsedMessages.size(); ++i) {
             std::cout <<  "here\n";
             std::cout << "i is " << i << std::endl;
@@ -155,14 +161,10 @@ struct message Server::get_client_message(int fd) {
 
 void    Server::handle_client_message(int fd)
 {
-    std::cout << "here\n";
     try
     {
-        std::cout << "111111\n";
         Client*     client = clients.at(fd); (void)client;
-        std::cout << "222222\n";
         message message = this->get_client_message(fd);
-        std::cout << "333333\n";
         std::cout << "prefix ->> " << message.prefix << std::endl;
         std::cout << "command ->> " << message.command << std::endl;
         // if(message && message.params) {
