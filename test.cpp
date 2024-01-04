@@ -1,5 +1,5 @@
-#include "parse.cpp"
 #include "dispatch.cpp"
+#include "parse.cpp"
 
 int main() {
 	// Lex.
@@ -83,46 +83,46 @@ int main() {
 	// // Dispatch.
 
 	// {
-		// server s = {
-			// .password = const_cast<char *>("234"),
-		// };
+	// server s = {
+	// .password = const_cast<char *>("234"),
+	// };
 
-		// {
-			// client c = { .state = client::unregistered };
+	// {
+	// client c = { .state = client::unregistered };
 
-			// assert(dispatch(
-				// &s,
-				// &c,
-				// (message){
-					// .command = const_cast<char *>("PASS"),
-					// .params = const_cast<char **>((const char *[]){
-						// "123",
-					// }),
-					// .params_count = 1,
-				// }
-			// ).has_value == false);
-		// }
+	// assert(dispatch(
+	// &s,
+	// &c,
+	// (message){
+	// .command = const_cast<char *>("PASS"),
+	// .params = const_cast<char **>((const char *[]){
+	// "123",
+	// }),
+	// .params_count = 1,
+	// }
+	// ).has_value == false);
+	// }
 
-		// {
-			// client c = { .state = client::registered };
+	// {
+	// client c = { .state = client::registered };
 
-			// optional<message> om = dispatch(
-				// &s,
-				// &c,
-				// (message){
-					// .command = const_cast<char *>("PASS"),
-					// .params = const_cast<char **>((const char *[]){
-						// "123",
-					// }),
-					// .params_count = 1,
-				// }
-			// );
+	// optional<message> om = dispatch(
+	// &s,
+	// &c,
+	// (message){
+	// .command = const_cast<char *>("PASS"),
+	// .params = const_cast<char **>((const char *[]){
+	// "123",
+	// }),
+	// .params_count = 1,
+	// }
+	// );
 
-			// assert(om.has_value);
+	// assert(om.has_value);
 
-			// assert(strcmp(om.value.command, ERR_ALREADYREGISTRED) == 0);
-		// }
+	// assert(strcmp(om.value.command, ERR_ALREADYREGISTRED) == 0);
+	// }
 
-		// printf("dispatch test: ok\n");
+	// printf("dispatch test: ok\n");
 	// }
 }

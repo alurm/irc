@@ -35,4 +35,7 @@ class Server {
 		void	connect_client();
 		void    handle_client_message(int fd);
 		struct message get_client_message(int fd);
+
+
+		
 };

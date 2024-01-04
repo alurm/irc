@@ -5,6 +5,7 @@ Server::Server(const std::string &port, const std::string &pass)
 {
     running = 1;
     sock = initialize_socket();
+    //todo parse_init 
 }
 
 int Server::initialize_socket() {
@@ -110,41 +111,45 @@ struct message Server::get_client_message(int fd) {
     char buffer[1024];
     int bytesRead;
 
-    // Loop to receive data
-    while (true) {
-        bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+    bytesRead = recv(fd, buffer, sizeof(buffer), 0);
 
-        if (bytesRead <= 0) {
-            // Handle connection closed or error
-            break;
-        }
-        message.append(buffer, bytesRead);
-
-        lex_state lexerState = {
-            .state = lex_state::in_word,
-            .word = "",
-            .in_trailing = false,
-        };
-        std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
-        parse_state parserState = {
-		    .prefix =
-			{
-			    .has_value = false,
-			},
-		};
-        std::vector<parseme> parsedMessages = parse_lexeme_string(lexemes, &parserState);
-
+    if (bytesRead < 0 && errno != EWOULDBLOCK) {
+        std::cout << "Error occurred during recv: " << strerror(errno) << std::endl;
+        throw std::runtime_error("Error while reading buffer from a client!");
+    }
+    message.append(buffer);
+        
+    std::cout << "message is " << message << std::endl;
+    lex_state lexerState = {
+        .state = lex_state::in_word,
+        .word = "",
+        .in_trailing = false,
+    };
+    std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
+    if (lexemes.empty()) {
+        std::cout << "lexemes are empty\n";
+    }
+    parse_state parserState = {
+        .prefix =
+        {
+            .has_value = false,
+        },
+    };
+    std::vector<parseme> parsedMessages = parse_lexeme_string(lexemes, &parserState);
+    if (!parsedMessages.empty()) {
+        std::cout << "}}}}\n";
+        std::cout << ">>>>>>>>>" << parsedMessages[0].value.message.prefix << std::endl;
         for (size_t i = 0; i < parsedMessages.size(); ++i) {
+            std::cout <<  "here\n";
+            std::cout << "i is " << i << std::endl;
             if (parsedMessages[i].tag == parseme::message) {
                 m = parsedMessages[i].value.message;
                 std::cout << ">>>>>>>>>>" << m.prefix << "<<<<<<<<<<<<" << std::endl;
-                return m;
             }
-            // You can add an 'else' block here for error handling or additional processing
         }
-        // message.clear();
+    } else {
+        std::cout << "parsedMessages is empty!" << std::endl;
     }
-
     return m;
 }
 
@@ -153,9 +158,18 @@ void    Server::handle_client_message(int fd)
     std::cout << "here\n";
     try
     {
+        std::cout << "111111\n";
         Client*     client = clients.at(fd); (void)client;
-        struct message message = this->get_client_message(fd);
-        std::cout << "hmmmmm ->> " << message.prefix << std::endl;
+        std::cout << "222222\n";
+        message message = this->get_client_message(fd);
+        std::cout << "333333\n";
+        std::cout << "prefix ->> " << message.prefix << std::endl;
+        std::cout << "command ->> " << message.command << std::endl;
+        // if(message && message.params) {
+        //     std::cout << "params ->> " << message.params[0] << std::endl;
+        //     std::cout << "params ->> " << message.params[1] << std::endl;
+        // }
+
     }
     catch (const std::exception& e)
     {
