@@ -1,5 +1,5 @@
 #include "Server.hpp"
-#include "Parser.hpp"
+#include "IRCResponse.hpp"
 
 int main(int argc, char **argv) {
 

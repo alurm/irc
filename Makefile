@@ -5,7 +5,7 @@ cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
 test : $(addprefix objects/, $(addsuffix .o, test)) Makefile
 	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
-validation : $(addprefix objects/, $(addsuffix .o, validation Server parse Client)) Makefile
+validation : $(addprefix objects/, $(addsuffix .o, validation Server parse Client Channel State)) Makefile
 	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
 objects/%.o : %.cpp Makefile

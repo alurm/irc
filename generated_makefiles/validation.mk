@@ -1,9 +1,14 @@
-validation.o: validation.cpp Server.hpp Client.hpp Channel.hpp Parser.hpp
+validation.o: validation.cpp Server.hpp Channel.hpp Client.hpp \
+  IRCResponse.hpp State.hpp Parser.hpp
 
 Server.hpp:
 
+Channel.hpp:
+
 Client.hpp:
 
-Channel.hpp:
+IRCResponse.hpp:
+
+State.hpp:
 
 Parser.hpp:

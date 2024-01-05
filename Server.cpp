@@ -1,16 +1,16 @@
 #include "Server.hpp"
-#include "Client.hpp"
+
 Server::Server(const std::string &port, const std::string &pass)
     : port(port), host("127.0.0.1"), pass(pass) {
 	running = 1;
-	sock = initialize_socket();
+	sock = initializeSocket();
 }
 
-int Server::initialize_socket() {
+int Server::initializeSocket() {
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0) {
 		throw std::runtime_error(
-		    "Eror: Unabl to opn the socket sqses 🤮 բուլկի");
+		    "Eror: Unabl to open the socket 🤮");
 	}
 
 	int optval = 1;
@@ -44,8 +44,8 @@ int Server::initialize_socket() {
 }
 
 Server::~Server() {
-	for (size_t i = 0; i < _channels.size(); i++)
-		delete _clients[i];
+	for (size_t i = 0; i < channels.size(); i++)
+		delete clients[i];
 }
 
 void Server::connect_client() {
@@ -73,16 +73,17 @@ void Server::connect_client() {
 
 	char message[1000];
 	sprintf(message, "%s:%d has connected.\n",
-		client->get_hostname().c_str(), client->get_port());
+		client->getHostname().c_str(), client->getPort());
 	std::cout << message;
 }
 
-void Server::disconnect_client(int fd) {
+void Server::disconnectClient(int fd) {
 	try {
 		Client *client = clients.at(fd);
-		// leave client
-		/*TODO leave function*/
-		// client->leave() leave from channel
+		// client->handleChannelLeave();
+		char message[1000];
+		sprintf(message, "%s:%d has disconnected!", client->getHostname().c_str(), client->getPort());
+		std::cout << message << std::endl;
 		clients.erase(fd);
 		std::vector<pollfd>::iterator it_b = fds.begin();
 		std::vector<pollfd>::iterator it_e = fds.end();
@@ -96,10 +97,6 @@ void Server::disconnect_client(int fd) {
 			}
 		}
 
-		char message[1000];
-		sprintf(message, "%s:%d has disconnected!\n",
-			client->get_hostname().c_str(), client->get_port());
-		std::cout << message;
 		delete client;
 	} catch (const std::exception &e) {
 		std::cout << "Error while disconnecting! " << e.what()
@@ -169,12 +166,18 @@ void Server::handle_client_message(int fd) {
 		message message = this->get_client_message(fd);
 		std::cout << "prefix ->> " << message.prefix << std::endl;
 		std::cout << "command ->> " << message.command << std::endl;
+		
 		// if(message && message.params) {
 		//     std::cout << "params ->> " << message.params[0] <<
 		//     std::endl; std::cout << "params ->> " <<
 		//     message.params[1] << std::endl;
 		// }
-
+		/*
+			TODO dispatch(message)
+			.validation for each message
+			.execute
+			.rsponce
+		*/
 	} catch (const std::exception &e) {
 		std::cout << "Error while handling the client message! "
 			  << e.what() << std::endl;
@@ -200,7 +203,7 @@ void Server::start() {
 			}
 
 			if (it->revents & POLLHUP) {
-				disconnect_client(it->fd);
+				disconnectClient(it->fd);
 				break;
 			}
 
@@ -215,37 +218,28 @@ void Server::start() {
 	}
 }
 
-std::string Server::get_password() const { return pass; }
+std::string Server::getPassword() const { return pass; }
 
-Client *Server::get_client(const std::string &nickname) {
-	std::map<int, Client *>::iterator start = clients.begin();
-	std::map<int, Client *>::iterator end = clients.end();
-
-	while (start != end) {
-		if (!nickname.compare(start->second->get_nickname()))
-			return start->second;
-
-		start++;
-	}
-
-	return NULL;
+Client* Server::getClient(const std::string &nickname) {
+    for (std::map<int, Client*>::iterator it = clients.begin(); it != clients.end(); ++it) {
+        if (it->second && nickname == it->second->getNickname()) {
+            return it->second;
+        }
+    }
+    return NULL;
 }
 
-Channel *Server::get_channel(const std::string &name) {
-	std::vector<Channel *>::iterator start = channels.begin();
-	std::vector<Channel *>::iterator end = channels.begin();
-
-	while (start != end) {
-		if (!name.compare((*start)->get_name()))
-			return (*start);
-
-		start++;
-	}
-
-	return NULL;
+Channel* Server::getChannel(const std::string &name) {
+    for (size_t i = 0; i < channels.size(); ++i) {
+        Channel* currentChannel = channels[i];
+        if (currentChannel && name == currentChannel->getName()) {
+            return currentChannel;
+        }
+    }
+    return NULL;
 }
 
-Channel *Server::add_channel(const std::string &name, const std::string &key,
+Channel *Server::addChannel(const std::string &name, const std::string &key,
 			     Client *client) {
 	Channel *channel = new Channel(name, key, client);
 	channels.push_back(channel);

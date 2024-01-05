@@ -1,7 +1,57 @@
-Channel::Channel(const std::string& name, const std::string& key, Client* admin)
-    : _name(name), _admin(admin), _k(key), _l(0), _n(false)
-{
+#include "Channel.hpp"
 
+Channel::Channel(const std::string &name, const std::string &key, Client *admin)
+    : name(name), admin(admin), key(key), limits(0), message(false) {}
+
+std::string Channel::getName() const { return name; }
+
+std::vector<std::string> Channel::getNicknames() {
+    std::vector<std::string> nicknames;
+
+    for (client_iterator it = clients.begin(); it != clients.end(); ++it) {
+        Client *client = *it;
+
+        std::string nick = (client == admin ? "@" : "") + client->getNickname();
+        nicknames.push_back(nick);
+    }
+
+    return nicknames;
 }
+
+
+void Channel::sendAll(const std::string &message) {
+    for (client_iterator it = clients.begin(); it != clients.end(); ++it) {
+        (*it)->sendWithLineEnding(message);
+    }
+}
+
+
+void Channel::handleClientRemoval(Client *client) {
+    client_iterator it = clients.begin();
+
+    while (it != clients.end()) {
+        if (*it == client) {
+            it = clients.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    client->setChannel(NULL);
+
+    if (client == admin) {
+        if (!clients.empty()) {
+            admin = *(clients.begin());
+
+            std::string message = client->getNickname() +
+                " is now the admin of the channel " +
+                name;
+            std::cout << message << std::endl;
+        } else {
+            admin = NULL; 
+        }
+    }
+}
+
 
 Channel::~Channel() {}

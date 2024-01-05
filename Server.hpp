@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SERVER_HPP
+#define SERVER_HPP
 
 #include <iostream>
 #include <string.h>
@@ -10,11 +11,14 @@
 #include <vector>
 #include <netdb.h>
 #include <map>
-#include "Client.hpp"
 #include <unistd.h>
 #include "Channel.hpp"
+#include "Client.hpp"
 #include "Parser.hpp"
 #define MAX_CLIENTS 100
+
+class Client; 
+class Channel;
 
 class Server {
 	private:    
@@ -25,13 +29,13 @@ class Server {
 		const std::string       pass;
         std::vector<pollfd>     fds;
 		std::map<int, Client *> clients;
-		std::vector<Client> 	channels;
+		std::vector<Channel *> 	channels;
 	public:
 		Server(const std::string &port, const std::string &pass);
 		~Server();
-		int		initialize_socket();
+		int		initializeSocket();
 		void	start();
-		void	disconnect_client(int fd);
+		void	disconnectClient(int fd);
 		void	connect_client();
 		void    handle_client_message(int fd);
 		struct message get_client_message(int fd);
@@ -43,6 +47,8 @@ class Server {
 
 
 
-		Channel*        add_channel(const std::string &name, const std::string &key, Client *client);
+		Channel*        addChannel(const std::string &name, const std::string &key, Client *client);
 
 };
+
+#endif
