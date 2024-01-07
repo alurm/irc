@@ -1,3 +1,9 @@
-parse.o: parse.cpp Parser.hpp
-
-Parser.hpp:
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+parse.cpp

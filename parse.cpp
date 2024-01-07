@@ -181,7 +181,7 @@ parseme parse(lexeme l, parse_state *p) {
 			};
 		}
 		message m = {
-		    .params_count = p->words.size() - 1,
+		    .params_count = static_cast<int>(p->words.size()) - 1,
 		};
 		if (p->prefix.has_value) {
 			m.prefix = strdup(p->prefix.value.c_str());
@@ -223,9 +223,17 @@ parseme parse(lexeme l, parse_state *p) {
 			free(word);
 			return (parseme){.tag = parseme::nothing};
 		} else {
-			p->words.push_back(word);
-			free(word);
-			return (parseme){.tag = parseme::nothing};
+			if (p->words.size() == 0) {
+				// The first non-prefixed word is considered the command
+				p->words.push_back(word);
+				free(word);
+				return (parseme){.tag = parseme::nothing};
+			} else {
+				// All subsequent non-prefixed words are considered params
+				p->words.push_back(word);
+				free(word);
+				return (parseme){.tag = parseme::nothing};
+			}
 		}
 		break;
 	}

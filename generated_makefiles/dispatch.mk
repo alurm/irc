@@ -1,1 +1,9 @@
-dispatch.o: dispatch.cpp
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+dispatch.cpp

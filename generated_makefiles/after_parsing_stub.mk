@@ -1,1 +1,9 @@
-after_parsing_stub.o: after_parsing_stub.cpp
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+after_parsing_stub.cpp

@@ -9,8 +9,7 @@ Server::Server(const std::string &port, const std::string &pass)
 int Server::initializeSocket() {
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0) {
-		throw std::runtime_error(
-		    "Eror: Unabl to open the socket 🤮");
+		throw std::runtime_error("Eror: Unabl to open the socket 🤮");
 	}
 
 	int optval = 1;
@@ -82,7 +81,8 @@ void Server::disconnectClient(int fd) {
 		Client *client = clients.at(fd);
 		// client->handleChannelLeave();
 		char message[1000];
-		sprintf(message, "%s:%d has disconnected!", client->getHostname().c_str(), client->getPort());
+		sprintf(message, "%s:%d has disconnected!",
+			client->getHostname().c_str(), client->getPort());
 		std::cout << message << std::endl;
 		clients.erase(fd);
 		std::vector<pollfd>::iterator it_b = fds.begin();
@@ -119,8 +119,10 @@ struct message Server::get_client_message(int fd) {
 		    "Error while reading buffer from a client!");
 	}
 	message.append(buffer);
-
 	std::cout << "message is " << message << std::endl;
+	std::stringstream ss(message);
+	std::string syntax;
+	
 	std::cout << "bull" << (message.back() == '\n') << std::endl;
 	size_t lastNewlinePos = message.find_last_of('\n');
 	if (lastNewlinePos != std::string::npos) {
@@ -160,13 +162,15 @@ struct message Server::get_client_message(int fd) {
 }
 
 void Server::handle_client_message(int fd) {
+	std::cout << "In handle client message\n";
 	try {
 		Client *client = clients.at(fd);
 		(void)client;
 		message message = this->get_client_message(fd);
+		std::cout << "?????\n";
 		std::cout << "prefix ->> " << message.prefix << std::endl;
-		std::cout << "command ->> " << message.command << std::endl;
-		
+//		std::cout << "command ->> " << message.command << std::endl;
+
 		// if(message && message.params) {
 		//     std::cout << "params ->> " << message.params[0] <<
 		//     std::endl; std::cout << "params ->> " <<
@@ -178,6 +182,14 @@ void Server::handle_client_message(int fd) {
 			.execute
 			.rsponce
 		*/
+//	 std::vector<std::string> paramsVector;
+//	 // Iterate through the char** array and convert each char* to std::string
+//	 for (int i = 0; i < countParams(message.params); ++i) {
+//	 	std::string param = std::string(message.params[i]);
+//	 	paramsVector.push_back(param);
+//	 }
+//	 Base *command;
+//	 command->execute(client, paramsVector);
 	} catch (const std::exception &e) {
 		std::cout << "Error while handling the client message! "
 			  << e.what() << std::endl;
@@ -220,27 +232,28 @@ void Server::start() {
 
 std::string Server::getPassword() const { return pass; }
 
-Client* Server::getClient(const std::string &nickname) {
-    for (std::map<int, Client*>::iterator it = clients.begin(); it != clients.end(); ++it) {
-        if (it->second && nickname == it->second->getNickname()) {
-            return it->second;
-        }
-    }
-    return NULL;
+Client *Server::getClient(const std::string &nickname) {
+	for (std::map<int, Client *>::iterator it = clients.begin();
+	     it != clients.end(); ++it) {
+		if (it->second && nickname == it->second->getNickname()) {
+			return it->second;
+		}
+	}
+	return NULL;
 }
 
-Channel* Server::getChannel(const std::string &name) {
-    for (size_t i = 0; i < channels.size(); ++i) {
-        Channel* currentChannel = channels[i];
-        if (currentChannel && name == currentChannel->getName()) {
-            return currentChannel;
-        }
-    }
-    return NULL;
+Channel *Server::getChannel(const std::string &name) {
+	for (size_t i = 0; i < channels.size(); ++i) {
+		Channel *currentChannel = channels[i];
+		if (currentChannel && name == currentChannel->getName()) {
+			return currentChannel;
+		}
+	}
+	return NULL;
 }
 
 Channel *Server::addChannel(const std::string &name, const std::string &key,
-			     Client *client) {
+			    Client *client) {
 	Channel *channel = new Channel(name, key, client);
 	channels.push_back(channel);
 

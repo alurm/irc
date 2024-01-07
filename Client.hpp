@@ -20,7 +20,7 @@ class Client {
 	std::string real_name;
 
 	Channel *chan;
-	client_state::ClientState status;
+
 
       public:
 	Client(int fd, int port, const std::string &hostname);
@@ -36,6 +36,7 @@ class Client {
 	Channel *getChannel() const;
 
 	// set
+	client_state::ClientState status;
 	void setNickname(const std::string &nickname);
 	void setUsername(const std::string &username);
 	void setRealname(const std::string &realname);

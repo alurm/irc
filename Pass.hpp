@@ -1,8 +1,17 @@
-//
-// Created by  on 1/6/24.
-//
+#ifndef PASS_HPP
+#define PASS_HPP
 
-#ifndef FT_IRC_PASS_H
-#define FT_IRC_PASS_H
+#include "Base.hpp"
+#include "IRCResponse.hpp"
 
-#endif //FT_IRC_PASS_H
+class Pass : public Base
+{
+public:
+
+    Pass(Server* srv, bool auth);
+    ~Pass();
+
+    void    execute(Client* client, std::vector<std::string> args);
+};
+
+#endif

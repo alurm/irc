@@ -1,5 +1,9 @@
-test.o: test.cpp dispatch.cpp Parser.hpp
-
-dispatch.cpp:
-
-Parser.hpp:
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+test.cpp

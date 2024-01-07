@@ -15,6 +15,8 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
+#include "Base.hpp"
+#include "Utils.hpp"
 #define MAX_CLIENTS 100
 
 class Client; 
