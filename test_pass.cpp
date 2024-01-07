@@ -1,0 +1,58 @@
+//#include "dispatch.cpp"
+#include "Parser.hpp"
+
+int main() {
+    // Lex.
+
+    lex_state state = {
+            .state = lex_state::in_word,
+            .word = "",
+            .in_trailing = false,
+    };
+
+    std::vector <lexeme> lexemes =
+            lex_string("PASS password\r\n",
+                       &state);
+    {
+        {
+            lexeme l = lexemes[0];
+            assert(l.tag == lexeme::word &&
+                   strcmp(l.value.word,
+                          "PASS") == 0);
+        }
+
+
+        {
+            lexeme l = lexemes[1];
+            assert(l.tag == lexeme::word &&
+                   strcmp(l.value.word, "password") == 0);
+        }
+
+        assert(lexemes.size() == 2);
+
+        printf("lex test: ok\n");
+    }
+
+    // Parse.
+
+    {
+        parse_state p = {
+                .prefix =
+                        {
+                                .has_value = false,
+                        },
+        };
+
+        std::vector <parseme> parsemes =
+                parse_lexeme_string(lexemes, &p);
+
+        assert(parsemes.size() == 1 &&
+               parsemes[0].tag == parseme::message);
+
+        message m = parsemes[0].value.message;
+
+        assert(strcmp(m.command, "PASS") == 0);
+        assert(m.params_count == 2);
+        assert(strcmp(m.params[0], "password") == 0);
+        printf("parse test: ok\n");
+    }
