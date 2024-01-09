@@ -91,21 +91,38 @@ lexeme lex(char c, lex_state *l) {
 		return (lexeme){.tag = lexeme::nothing};
 		break;
 	case lex_state::out_of_word:
+		if (c == '\r') {
+			char *word = strdup(l->word.c_str());
+			assert(word != 0);
+			l->word = "";
+			l->state = lex_state::carriage_return_found;
+			return (lexeme){
+			    .tag = lexeme::word,
+			    .value.word = word,
+			};
+		}
 		if (c == ':') {
 			l->in_trailing = true;
 			l->state = lex_state::in_word;
 			return (lexeme){.tag = lexeme::nothing};
 		}
-		if (c == ' ') {
+		if (c != ' ' && c != '\r' && c != '\n') {
+			l->word += c;
 			return (lexeme){.tag = lexeme::nothing};
+		} else {
+			if (!l->word.empty()) {
+				// Return the word as a lexeme (parameter)
+				lexeme param = {.tag = lexeme::word,
+						.value.word =
+						    strdup(l->word.c_str())};
+				l->word.clear();
+				l->state = lex_state::out_of_word;
+				return param;
+			} else {
+				l->state = lex_state::out_of_word;
+				return (lexeme){.tag = lexeme::nothing};
+			}
 		}
-		if (c == '\r') {
-			l->state = lex_state::carriage_return_found;
-			return (lexeme){.tag = lexeme::nothing};
-		}
-		l->state = lex_state::in_word;
-		l->word += c;
-		return (lexeme){.tag = lexeme::nothing};
 		break;
 	}
 	std::cout << "stex\n";
@@ -172,9 +189,11 @@ void print_message(message m) {
 // };
 
 parseme parse(lexeme l, parse_state *p) {
+	std::cout << "in parsing\n";
 	switch (l.tag) {
 	case lexeme::carriage_return_line_feed: {
 		if (p->words.size() == 0) {
+			std::cout << "1111\n";
 			return (parseme){
 			    .tag = parseme::error,
 			    .value.error = parse_error::no_command,
@@ -221,25 +240,28 @@ parseme parse(lexeme l, parse_state *p) {
 			    .value = without_colon,
 			};
 			free(word);
+			std::cout << "aaaa\n";
 			return (parseme){.tag = parseme::nothing};
 		} else {
 			if (p->words.size() == 0) {
-				// The first non-prefixed word is considered the command
-				p->words.push_back(word);
+				char *new_word = strdup(word);
+				p->words.push_back(new_word);
 				free(word);
+				std::cout << "bbb\n";
 				return (parseme){.tag = parseme::nothing};
 			} else {
-				// All subsequent non-prefixed words are considered params
 				p->words.push_back(word);
 				free(word);
+				std::cout << "ccc\n";
 				return (parseme){.tag = parseme::nothing};
 			}
 		}
 		break;
 	}
-	default:
-		// To-do: handle errors.
+	default: {
+		std::cout << "222\n";
 		return (parseme){.tag = parseme::error};
+	}
 	}
 }
 
