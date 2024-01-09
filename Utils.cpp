@@ -7,3 +7,4 @@ int countParams(char **params) {
     }
     return count;
 }
+

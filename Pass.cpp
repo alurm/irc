@@ -1,6 +1,11 @@
 #include "Pass.hpp"
+Base2::Base2(Server *srv, bool auth) : _srv(srv), _auth(auth) {}
 
-Pass::Pass(Server* srv, bool auth) : Base(srv, auth) {}
+Base2::~Base2() {}
+
+bool Base2::auth_required() const { return _auth; }
+
+Pass::Pass(Server* srv, bool auth) : Base2(srv, auth) {}
 
 Pass::~Pass() {}
 

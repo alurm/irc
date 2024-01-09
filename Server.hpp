@@ -15,7 +15,8 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
-#include "Base.hpp"
+// #include "Base2.hpp"
+#include "Pass.hpp"
 #include "Utils.hpp"
 #define MAX_CLIENTS 100
 
@@ -41,8 +42,7 @@ class Server {
 		void	connect_client();
 		void    handle_client_message(int fd);
 		struct message get_client_message(int fd);
-
-
+		void dispatch(Client *c, message m);
 		std::string     getPassword() const;
         Client*         getClient(const std::string &nickname);
         Channel*        getChannel(const std::string &name);

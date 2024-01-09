@@ -122,7 +122,7 @@ struct message Server::get_client_message(int fd) {
 	std::cout << "message is " << message << std::endl;
 	std::stringstream ss(message);
 	std::string syntax;
-	
+
 	std::cout << "bull" << (message.back() == '\n') << std::endl;
 	size_t lastNewlinePos = message.find_last_of('\n');
 	if (lastNewlinePos != std::string::npos) {
@@ -168,28 +168,29 @@ void Server::handle_client_message(int fd) {
 		(void)client;
 		message message = this->get_client_message(fd);
 		std::cout << "?????\n";
-		std::cout << "prefix ->> " << message.prefix << std::endl;
-//		std::cout << "command ->> " << message.command << std::endl;
+		// std::cout << "prefix ->> " << message.prefix << std::endl;
+		std::cout << "command ->> " << message.command << std::endl;
 
-		// if(message && message.params) {
-		//     std::cout << "params ->> " << message.params[0] <<
-		//     std::endl; std::cout << "params ->> " <<
-		//     message.params[1] << std::endl;
-		// }
+		if (message.params != nullptr) {
+			std::cout << "params ->> " << message.params[0]
+				  << std::endl;
+		}
 		/*
 			TODO dispatch(message)
 			.validation for each message
 			.execute
 			.rsponce
 		*/
-//	 std::vector<std::string> paramsVector;
-//	 // Iterate through the char** array and convert each char* to std::string
-//	 for (int i = 0; i < countParams(message.params); ++i) {
-//	 	std::string param = std::string(message.params[i]);
-//	 	paramsVector.push_back(param);
-//	 }
-//	 Base *command;
-//	 command->execute(client, paramsVector);
+		std::vector<std::string> paramsVector;
+		// Iterate through the char** array and convert each char* to
+		// std::string
+		for (int i = 0; i < message.params_count; i++) {
+			std::cout << "in loop \n";
+			std::string param = std::string(message.params[i]);
+			paramsVector.push_back(param);
+		}
+		std::cout << "here >>>>>> \n";
+		dispatch(client, message);
 	} catch (const std::exception &e) {
 		std::cout << "Error while handling the client message! "
 			  << e.what() << std::endl;
@@ -258,4 +259,22 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 	channels.push_back(channel);
 
 	return channel;
+}
+
+void Server::dispatch( Client *c, message m) {
+	std::cout << " In dispatch\n";
+	std::vector<std::string> args;
+	std::cout << "222222222 \n";
+
+	for (int i = 0; i < m.params_count; ++i) {
+		args.push_back(std::string(m.params[i]));
+	}
+	std::cout << "333333333 \n";
+
+	if (strcmp(m.command, "PASS") == 0) {
+		Pass* pass = new Pass(this, false);
+		std::cout << "in pass\n";
+		pass->execute(c, args);
+	}
+
 }
