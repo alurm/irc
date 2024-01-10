@@ -7,6 +7,7 @@
 #include "IRCResponse.hpp"
 #include "State.hpp"
 #include <sstream>
+
 class Channel;
 
 class Client {
@@ -18,10 +19,7 @@ class Client {
 	std::string user_name;
 	std::string host_name;
 	std::string real_name;
-
 	Channel *chan;
-
-
       public:
 	Client(int fd, int port, const std::string &hostname);
 	~Client();

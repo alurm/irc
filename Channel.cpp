@@ -19,11 +19,29 @@ std::vector<std::string> Channel::getNicknames() {
 }
 
 
-void Channel::sendAll(const std::string &message) {
+void    Channel::sendAll(const std::string &message) {
     for (client_iterator it = clients.begin(); it != clients.end(); ++it) {
         (*it)->sendWithLineEnding(message);
     }
 }
+
+// void    Channel::broadcast(const std::string& message, Client* exclude)
+// {
+//     client_iterator it_b = clients.begin();
+//     client_iterator it_e = clients.end();
+
+//     while (it_b != it_e)
+//     {
+//         if (*it_b == exclude)
+//         {
+//             it_b++;
+//             continue;
+//         }
+
+//         (*it_b)->sendWithLineEnding(message);
+//         it_b++;
+//     }
+// }
 
 std::string Channel::getKey() const { return key; }
 
@@ -60,6 +78,5 @@ void Channel::handleClientRemoval(Client *client) {
         }
     }
 }
-
 
 Channel::~Channel() {}

@@ -279,14 +279,14 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "JOIN") == 0) {
 		command = new Join(this, true);
 		std::cout << "in join\n";
+	} else if (strcmp(m.command, "NICK") == 0) {
+		command = new Nick(this, false);
+		std::cout << "in nick\n";
+	} else if (strcmp(m.command, "USER") == 0) {
+		command = new User(this, false);
+		std::cout << "in user\n";
 	}
-	// else if (strcmp(m.command, "NICK") == 0) {
-	// 	command = new Nick(this, false);
-	// 	std::cout << "in nick\n";
-	// } else if (strcmp(m.command, "USER") == 0) {
-	// 	command new = Join(this, false);
-	// 	std::cout << "in user\n";
-	// } else if (strcmp(m.command, "QUIT") == 0) {
+	// else if (strcmp(m.command, "QUIT") == 0) {
 	// 	command = new Quit(this, false);
 	// 	std::cout << "in quit\n";
 	// } else if (strcmp(m.command, "MODE") == 0) {
@@ -324,3 +324,10 @@ void Server::dispatch(Client *c, message m) {
 		delete command;
 	}
 }
+
+// void Server::broadcastToChannelsInClientChannels(const std::string &message,
+// 						 Channel *channels) {
+// 	for (size_t i = 0; channels[i] != nullptr; ++i) {
+// 		channels[i]->broadcast(message);
+// 	}
+// }

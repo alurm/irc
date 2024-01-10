@@ -75,7 +75,6 @@ int main() {
 		assert(strcmp(m.params[0], "#channel") == 0);
 		assert(strcmp(m.params[1],
 			      "Hello everyone! How are you today?") == 0);
-
 		printf("parse test: ok\n");
 	}
 

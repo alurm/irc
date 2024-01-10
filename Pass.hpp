@@ -44,4 +44,26 @@ class Join : public Base2
         void    execute(Client* client, std::vector<std::string> args);
 };
 
+class Nick : public Base2
+{
+    public:
+
+        Nick(Server* srv,  bool auth);
+        ~Nick();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+
+class User : public Base2
+{
+    public:
+
+        User(Server* server,  bool auth);
+        ~User();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+
 #endif

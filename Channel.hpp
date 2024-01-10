@@ -1,10 +1,11 @@
-#pragma once
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #include "Client.hpp"
 #include "Server.hpp"
-
-class Client;
+#include <vector>
 class Server;
+class Client;
 
 class Channel {
 	typedef std::vector<Client *>::iterator client_iterator;
@@ -32,3 +33,5 @@ class Channel {
 	~Channel();
 	void handleClientRemoval(Client *client);
 };
+
+#endif
