@@ -105,6 +105,7 @@ void Server::disconnectClient(int fd) {
 }
 
 struct message Server::get_client_message(int fd) {
+	std::cout << ">>>>>> " << pass << std::endl;
 	struct message m;
 	std::string message;
 	char buffer[1024];
@@ -129,9 +130,6 @@ struct message Server::get_client_message(int fd) {
 		message.replace(lastNewlinePos, 1, "\r\n");
 	}
 	std::cout << "Modified message is " << message << std::endl;
-	std::string simulated_message =
-	    ":Nickname!username@hostname.com PRIVMSG #channel :Hello everyone! "
-	    "How are you today?\r\n";
 	lex_state lexerState = {
 	    .state = lex_state::in_word,
 	    .word = "",
@@ -261,20 +259,63 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 	return channel;
 }
 
-void Server::dispatch( Client *c, message m) {
+void Server::dispatch(Client *c, message m) {
 	std::cout << " In dispatch\n";
 	std::vector<std::string> args;
-	std::cout << "222222222 \n";
+
+	Base2 *command = NULL;
 
 	for (int i = 0; i < m.params_count; ++i) {
 		args.push_back(std::string(m.params[i]));
 	}
-	std::cout << "333333333 \n";
+
+	for (int i = 0; i < m.params_count; ++i) {
+		delete[] m.params[i];
+	}
+	delete[] m.params;
+	m.params = nullptr;
 
 	if (strcmp(m.command, "PASS") == 0) {
-		Pass* pass = new Pass(this, false);
+		command = new Pass(this, false);
 		std::cout << "in pass\n";
-		pass->execute(c, args);
-	}
+	} 
+	// else if (strcmp(m.command, "JOIN") == 0) {
+	// 	command = new Join(this, true);
+	// 	std::cout << "in join\n";
+	// } else if (strcmp(m.command, "NICK") == 0) {
+	// 	command = new Nick(this, false);
+	// 	std::cout << "in nick\n";
+	// } else if (strcmp(m.command, "USER") == 0) {
+	// 	command new = Join(this, false);
+	// 	std::cout << "in user\n";
+	// } else if (strcmp(m.command, "QUIT") == 0) {
+	// 	command = new Quit(this, false);
+	// 	std::cout << "in quit\n";
+	// } else if (strcmp(m.command, "MODE") == 0) {
+	// 	command = new Mode(this, true);
+	// 	std::cout << "in mode\n";
+	// } else if (strcmp(m.command, "PART") == 0) {
+	// 	command = new Part(this, true);
+	// 	std::cout << "in part\n";
+	// } else if (strcmp(m.command, "PONG") == 0) {
+	// 	command = new Pong(this, true);
+	// 	std::cout << "in pong\n";
+	// } else if (strcmp(m.command, "KICK") == 0) {
+	// 	command = new Kick(this, true);
+	// 	std::cout << "in kick\n";
+	// } else if (strcmp(m.command, "PING") == 0) {
+	// 	command = new Ping(this, true);
+	// 	std::cout << "in ping\n";
+	// } else if (strcmp(m.command, "NOTICE") == 0) {
+	// 	command = new Notice(this, true);
+	// 	std::cout << "in notice\n";
+	// } else if (strcmp(m.command, "PRIVMSG") == 0) {
+	// 	command = new PrivMsg(this, true);
+	// 	std::cout << "in priv_msg\n";
+	// }
 
+	if (command != NULL) {
+		command->execute(c, args);
+		delete command;
+	}
 }

@@ -110,6 +110,7 @@ lexeme lex(char c, lex_state *l) {
 			l->word += c;
 			return (lexeme){.tag = lexeme::nothing};
 		} else {
+
 			if (!l->word.empty()) {
 				// Return the word as a lexeme (parameter)
 				lexeme param = {.tag = lexeme::word,
@@ -193,7 +194,6 @@ parseme parse(lexeme l, parse_state *p) {
 	switch (l.tag) {
 	case lexeme::carriage_return_line_feed: {
 		if (p->words.size() == 0) {
-			std::cout << "1111\n";
 			return (parseme){
 			    .tag = parseme::error,
 			    .value.error = parse_error::no_command,
@@ -230,9 +230,9 @@ parseme parse(lexeme l, parse_state *p) {
 	}
 	case lexeme::word: {
 		char *word = l.value.word;
-		assert(strlen(word) != 0);
-		if (word[0] == ':') {
-			assert(p->words.size() == 0);
+		// assert(strlen(word) != 0);
+		if (word[0] == ':'  && p->words.size() == 0) {
+			// assert(p->words.size() == 0);
 			char *without_colon = word + 1;
 			assert(without_colon != 0);
 			p->prefix = (optional<std::string>){
@@ -240,28 +240,23 @@ parseme parse(lexeme l, parse_state *p) {
 			    .value = without_colon,
 			};
 			free(word);
-			std::cout << "aaaa\n";
 			return (parseme){.tag = parseme::nothing};
 		} else {
 			if (p->words.size() == 0) {
 				char *new_word = strdup(word);
 				p->words.push_back(new_word);
 				free(word);
-				std::cout << "bbb\n";
 				return (parseme){.tag = parseme::nothing};
 			} else {
 				p->words.push_back(word);
 				free(word);
-				std::cout << "ccc\n";
 				return (parseme){.tag = parseme::nothing};
 			}
 		}
 		break;
 	}
-	default: {
-		std::cout << "222\n";
+	default: 
 		return (parseme){.tag = parseme::error};
-	}
 	}
 }
 

@@ -10,7 +10,7 @@ int main() {
 	    .in_trailing = false,
 	};
 
-	std::vector<lexeme> lexemes = lex_string("PASS password\r\n", &state);
+	std::vector<lexeme> lexemes = lex_string("PASS ::\r\n", &state);
 	{
 		{
 			lexeme l = lexemes[0];
@@ -20,7 +20,7 @@ int main() {
 			{
 				lexeme l = lexemes[1];
 				assert(l.tag == lexeme::word &&
-				       strcmp(l.value.word, "password") == 0);
+				       strcmp(l.value.word, ":") == 0);
 			}
 
 			{
@@ -59,7 +59,7 @@ int main() {
 
 			assert(strcmp(m.command, "PASS") == 0);
 			assert(m.params_count == 1);
-			assert(strcmp(m.params[0], "password") == 0);
+			assert(strcmp(m.params[0], ":") == 0);
 			printf("parse test: ok\n");
 		}
 	}
