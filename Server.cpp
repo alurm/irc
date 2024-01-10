@@ -267,22 +267,20 @@ void Server::dispatch(Client *c, message m) {
 
 	for (int i = 0; i < m.params_count; ++i) {
 		args.push_back(std::string(m.params[i]));
-	}
-
-	for (int i = 0; i < m.params_count; ++i) {
 		delete[] m.params[i];
 	}
+
 	delete[] m.params;
-	m.params = nullptr;
+	m.params = NULL;
 
 	if (strcmp(m.command, "PASS") == 0) {
 		command = new Pass(this, false);
 		std::cout << "in pass\n";
-	} 
-	// else if (strcmp(m.command, "JOIN") == 0) {
-	// 	command = new Join(this, true);
-	// 	std::cout << "in join\n";
-	// } else if (strcmp(m.command, "NICK") == 0) {
+	} else if (strcmp(m.command, "JOIN") == 0) {
+		command = new Join(this, true);
+		std::cout << "in join\n";
+	}
+	// else if (strcmp(m.command, "NICK") == 0) {
 	// 	command = new Nick(this, false);
 	// 	std::cout << "in nick\n";
 	// } else if (strcmp(m.command, "USER") == 0) {
@@ -313,7 +311,14 @@ void Server::dispatch(Client *c, message m) {
 	// 	command = new PrivMsg(this, true);
 	// 	std::cout << "in priv_msg\n";
 	// }
-
+	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
+		c->respondWithPrefix(
+		    IRCResponse::ERR_NOTREGISTERED(c->getNickname()));
+		if (command != NULL) {
+			delete command;
+		}
+		return;
+	}
 	if (command != NULL) {
 		command->execute(c, args);
 		delete command;

@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
-    : name(name), admin(admin), key(key), limits(0), message(false) {}
+    : name(name), admin(admin), key(key), limit(0), message(false) {}
 
 std::string Channel::getName() const { return name; }
 
@@ -24,6 +24,14 @@ void Channel::sendAll(const std::string &message) {
         (*it)->sendWithLineEnding(message);
     }
 }
+
+std::string Channel::getKey() const { return key; }
+
+size_t Channel::getLimit() const {
+    return limit;
+}
+
+size_t  Channel::getClientCount()const { return clients.size(); }
 
 
 void Channel::handleClientRemoval(Client *client) {

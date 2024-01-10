@@ -6,39 +6,6 @@
 #include <string>
 #include <vector>
 
-// Lexer.
-
-// namespace lex_error {
-// enum type {
-// 	carriage_return_or_line_feed,
-// 	nil,
-// };
-// }
-
-// struct lexeme {
-// 	enum {
-// 		carriage_return_line_feed,
-// 		word,
-
-// 		error,
-// 		nothing,
-// 	} tag;
-// 	union {
-// 		char *word;
-// 		lex_error::type error;
-// 	} value;
-// };
-
-// struct lex_state {
-// 	enum {
-// 		in_word,
-// 		out_of_word,
-// 		carriage_return_found,
-// 	} state;
-// 	std::string word;
-// 	bool in_trailing;
-// };
-
 lexeme lex(char c, lex_state *l) {
 	if (c == 0)
 		return (lexeme){
@@ -143,15 +110,6 @@ std::vector<lexeme> lex_string(const char *string, lex_state *state) {
 	return result;
 }
 
-// Parser.
-
-// struct message {
-// 	char *prefix; // Nilable. Unused.
-// 	char *command;
-// 	char **params;
-// 	int params_count;
-// };
-
 void print_message(message m) {
 	std::cout << "prefix: " << m.prefix << std::endl
 		  << "command: " << m.command << std::endl
@@ -160,34 +118,6 @@ void print_message(message m) {
 		std::cout << "\t" << m.params[i] << std::endl;
 	}
 }
-
-// namespace parse_error {
-// enum type {
-// 	no_command,
-// };
-// }
-
-// struct parseme {
-// 	enum parseme_tag {
-// 		nothing,
-// 		message,
-// 		error,
-// 	} tag;
-// 	union {
-// 		::message message;
-// 		parse_error::type error;
-// 	} value;
-// };
-
-// template <class t> struct optional {
-// 	t value;
-// 	bool has_value;
-// };
-
-// struct parse_state {
-// 	optional<std::string> prefix;
-// 	std::vector<std::string> words;
-// };
 
 parseme parse(lexeme l, parse_state *p) {
 	std::cout << "in parsing\n";
@@ -230,9 +160,9 @@ parseme parse(lexeme l, parse_state *p) {
 	}
 	case lexeme::word: {
 		char *word = l.value.word;
-		// assert(strlen(word) != 0);
+		assert(strlen(word) != 0);
 		if (word[0] == ':'  && p->words.size() == 0) {
-			// assert(p->words.size() == 0);
+			assert(p->words.size() == 0);
 			char *without_colon = word + 1;
 			assert(without_colon != 0);
 			p->prefix = (optional<std::string>){

@@ -34,4 +34,14 @@ class Pass : public Base2 {
 	void execute(Client *client, std::vector<std::string> args);
 };
 
+class Join : public Base2
+{
+    public:
+
+        Join(Server* srv,  bool auth);
+        ~Join();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
 #endif
