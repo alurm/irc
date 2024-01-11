@@ -167,12 +167,12 @@ void Server::handle_client_message(int fd) {
 		message message = this->get_client_message(fd);
 		std::cout << "?????\n";
 		// std::cout << "prefix ->> " << message.prefix << std::endl;
-		std::cout << "command ->> " << message.command << std::endl;
+		// std::cout << "command ->> " << message.command << std::endl;
 
-		if (message.params != nullptr) {
-			std::cout << "params ->> " << message.params[0]
-				  << std::endl;
-		}
+		// if (message.params != nullptr) {
+		// 	std::cout << "params ->> " << message.params[0]
+		// 		  << std::endl;
+		// }
 		/*
 			TODO dispatch(message)
 			.validation for each message
@@ -260,6 +260,8 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 }
 
 void Server::dispatch(Client *c, message m) {
+
+	std::cout << "Status is " << c->status << std::endl;
 	std::cout << " In dispatch\n";
 	std::vector<std::string> args;
 

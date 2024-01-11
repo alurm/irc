@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 Client::Client(int fd, int port, const std::string &hostname)
-    : fd(fd), port(port), host_name(hostname), status(client_state::HANDSHAKE){}
+    : fd(fd), port(port), host_name(hostname), status(client_state::HANDSHAKE), chan(NULL){}
 
 Client::~Client() {}
 
