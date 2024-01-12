@@ -41,7 +41,7 @@ struct lex_state {
 };
 
 struct message {
-	char *prefix; // Nilable. Unused.
+	char *prefix;
 	char *command;
 	char **params;
 	int params_count;

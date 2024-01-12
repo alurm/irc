@@ -96,7 +96,6 @@ void Server::disconnectClient(int fd) {
 				++it_b;
 			}
 		}
-
 		delete client;
 	} catch (const std::exception &e) {
 		std::cout << "Error while disconnecting! " << e.what()
@@ -105,8 +104,11 @@ void Server::disconnectClient(int fd) {
 }
 
 struct message Server::get_client_message(int fd) {
-	std::cout << ">>>>>> " << pass << std::endl;
 	struct message m;
+	m.prefix = NULL;
+	m.command = NULL;
+	m.params = NULL;
+	m.params_count = 0;
 	std::string message;
 	char buffer[1024];
 	int bytesRead;
@@ -170,10 +172,12 @@ void Server::handle_client_message(int fd) {
 				std::string param =
 				    std::string(message.params[i]);
 				
-				std::cout << "Param in index " << i << "is --->" << param[i] << std::endl;
+				std::cout << "Param in index " << i << "is --->" << param << std::endl;
 				paramsVector.push_back(param);
 			}
-			dispatch(client, message);
+			if(message.command) {
+				dispatch(client, message);
+			}
 		}
 	} catch (const std::exception &e) {
 		std::cout << "Error while handling the client message! "
@@ -245,6 +249,22 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 	return channel;
 }
 
+// "PASS"
+// "NICK"
+// "USER"
+// "PING"
+// "PONG"
+// "CAP"
+// "JOIN"
+// "PRIVMSG"
+// "KICK"
+// "INVITE"
+// "MODE"
+// "WHO"
+// "QUIT"
+// "TOPIC"
+// "PART"
+
 void Server::dispatch(Client *c, message m) {
 
 	std::cout << "Status is " << c->status << std::endl;
@@ -252,14 +272,16 @@ void Server::dispatch(Client *c, message m) {
 	std::vector<std::string> args;
 
 	Base2 *command = NULL;
+	
+	// if(m) {
+		for (int i = 0; i < m.params_count; ++i) {
+			args.push_back(std::string(m.params[i]));
+			delete[] m.params[i];
+		}
 
-	for (int i = 0; i < m.params_count; ++i) {
-		args.push_back(std::string(m.params[i]));
-		delete[] m.params[i];
-	}
-
-	delete[] m.params;
-	m.params = NULL;
+		delete[] m.params;
+		m.params = NULL;
+	// }
 
 	if (strcmp(m.command, "PASS") == 0) {
 		command = new Pass(this, false);
@@ -279,11 +301,20 @@ void Server::dispatch(Client *c, message m) {
 	}else if (strcmp(m.command, "MODE") == 0) {
 	  	command = new Mode(this, true);
 	  	std::cout << "in mode\n";
-	} 
+	}else if(strcmp(m.command, "TOPIC") == 0) {
+		command = new Topic(this, true);
+		std::cout << "in topic\n";
+	}
+	else {
+		std::cout << ">>>>>" << m.command << std::endl;
+		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(c->getNickname(), m.command));
+		return;
+	}
 	//else if (strcmp(m.command, "PART") == 0) {
 	//  	command = new Part(this, true);
 	//  	std::cout << "in part\n";
-	//  } else if (strcmp(m.command, "PONG") == 0) {
+	// } 
+	//else if (strcmp(m.command, "PONG") == 0) {
 	//  	command = new Pong(this, true);
 	//  	std::cout << "in pong\n";
 	//  } else if (strcmp(m.command, "KICK") == 0) {

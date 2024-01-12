@@ -89,4 +89,7 @@ public:
     static std::string RPL_MODE(const std::string& str, const std::string& channel, const std::string& modes, const std::string& args) {
         return ":" + str + " MODE " + channel + " " + modes + " " + args;
     }
+    static std::string ERR_ERRONEUSNICKNAME(const std::string &source, const std::string &command)  {
+        return "432 " + source + " " + command + " :Erroneous nickname";
+    }
 };

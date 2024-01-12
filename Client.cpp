@@ -5,6 +5,17 @@ Client::Client(int fd, int port, const std::string &hostname)
 
 Client::~Client() {}
 
+bool Client::nickIsCorrect(std::string buffer)
+{
+    std::string notAllowed = " ,*?!@$:#.";
+    std::size_t pos = buffer.find_first_of(notAllowed);
+    if (pos != std::string::npos)
+    {
+        return false;
+    }
+    return true;
+}
+
 int Client::getPort() const { return port; }
 int Client::getFd() const { 
 

@@ -54,6 +54,7 @@ class Client {
 
 	void handleChannelJoin(Channel *channel);
 	void handleChannelLeave();
+	bool nickIsCorrect(std::string buffer);
 };
 
 #endif 

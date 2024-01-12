@@ -86,5 +86,13 @@ class Mode : public Base2
         void    execute(Client* client, std::vector<std::string> args);
 };
 
+class Topic : public Base2
+{
+    public:
 
+        Topic(Server* server,  bool auth);
+        ~Topic();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
 #endif

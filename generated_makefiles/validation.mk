@@ -1,1 +1,9 @@
--Wall -Wextra -Werror -g -fsanitize=undefined -M -MM -MP validation.cpp
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+validation.cpp

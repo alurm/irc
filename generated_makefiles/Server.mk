@@ -1,18 +1,9 @@
-Server.o: Server.cpp Server.hpp Channel.hpp Client.hpp IRCResponse.hpp \
-  State.hpp Parser.hpp Pass.hpp Utils.hpp
-
-Server.hpp:
-
-Channel.hpp:
-
-Client.hpp:
-
-IRCResponse.hpp:
-
-State.hpp:
-
-Parser.hpp:
-
-Pass.hpp:
-
-Utils.hpp:
+-Wall
+-Wextra
+-Werror
+-g
+-fsanitize=undefined
+-M
+-MM
+-MP
+Server.cpp

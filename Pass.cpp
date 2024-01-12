@@ -12,7 +12,6 @@ Pass::Pass(Server *server, bool auth) : Base2(server, auth) {}
 Pass::~Pass() {}
 
 void Pass::execute(Client *client, std::vector<std::string> args) {
-	std::cout << "in execute of pass\n";
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "PASS"));
@@ -93,30 +92,17 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 	}
 
 	std::string nickname = args[0];
-
+	if (!client->nickIsCorrect(nickname)) {
+		client->respondWithPrefix(
+		    IRCResponse::ERR_ERRONEUSNICKNAME(client->getNickname(), nickname));
+		return;
+	}
 	if (server->getClient(nickname)) {
 		client->respondWithPrefix(
 		    IRCResponse::ERR_NICKNAMEINUSE(client->getNickname()));
 		return;
 	}
-
-	// std::string oldNickname = client->getNickname();
-
 	client->setNickname(nickname);
-	// TODO write logic about the nickname change
-	//  if (server->getClient(newNickname, true)) {
-	//  	client->setNickname(oldNickname);
-	//  	client->respondWithPrefix(
-	//  	    IRCResponse::ERR_NICKNAMEINUSE(client->getNickname()));
-	//  	return;
-	//  }
-
-	// client->setNickname(newNickname);
-	// client->respondWithPrefix(
-	//     IRCResponse::NICK_CHANGE_CONFIRMATION(oldNickname, newNickname));
-	// Channel *channels = getChannel();
-	// std::string message = ":" + oldNickname + " NICK :" + newNickname;
-	// server->broadcastToChannelsInClientChannels(message, channels);
 	client->sendWelcomeMessage();
 }
 
@@ -170,8 +156,8 @@ Mode::~Mode() {}
 
 void Mode::execute(Client *client, std::vector<std::string> args) {
 	if (args.size() < 2) {
-		client->respondWithPrefix(
-		    IRCResponse::ERR_NEEDMOREPARAMS(client->getNickname(), "MODE"));
+		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
+		    client->getNickname(), "MODE"));
 		return;
 	}
 
@@ -180,14 +166,14 @@ void Mode::execute(Client *client, std::vector<std::string> args) {
 	Channel *channel =
 	    server->getChannel(target); // MODE on clients not implemented
 	if (!channel) {
-		client->respondWithPrefix(
-		    IRCResponse::ERR_NOSUCHCHANNEL(client->getNickname(), target));
+		client->respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
+		    client->getNickname(), target));
 		return;
 	}
 
 	if (channel->getAdmin() != client) {
-		client->respondWithPrefix(
-		    IRCResponse::ERR_CHANOPRIVSNEEDED(client->getNickname(), target));
+		client->respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
+		    client->getNickname(), target));
 		return;
 	}
 
@@ -195,7 +181,7 @@ void Mode::execute(Client *client, std::vector<std::string> args) {
 
 	int i = 0, p = 2;
 	char c;
-
+	// TODO i o t modes
 	while ((c = args[1][i])) {
 		char prev_c = i > 0 ? args[1][i - 1] : '\0';
 		bool active = prev_c == '+';
@@ -203,9 +189,9 @@ void Mode::execute(Client *client, std::vector<std::string> args) {
 		switch (c) {
 		case 'n': {
 			channel->setMessage(active);
-			channel->sendAll(
-			    IRCResponse::RPL_MODE(client->getPrefix(), channel->getName(),
-				     (active ? "+n" : "-n"), ""));
+			channel->sendAll(IRCResponse::RPL_MODE(
+			    client->getPrefix(), channel->getName(),
+			    (active ? "+n" : "-n"), ""));
 			break;
 		}
 		case 'l': {
@@ -229,4 +215,13 @@ void Mode::execute(Client *client, std::vector<std::string> args) {
 		}
 		i++;
 	}
+}
+
+// topic
+Topic::Topic(Server *server, bool auth) : Base2(server, auth) {}
+
+Topic::~Topic() {}
+
+void Topic::execute(Client *client, std::vector<std::string> args) {
+
 }

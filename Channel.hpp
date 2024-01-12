@@ -15,9 +15,10 @@ class Channel {
 	Client *admin;
 	std::vector<Client *> clients;
 	std::string key;
+	 std::string  topic;
 	size_t limit;
 	bool message;
-
+	bool topicMode;
 	Channel();
 	Channel(const Channel &src);
 
@@ -36,7 +37,9 @@ class Channel {
 	void setLimit(size_t l);
 	void setKey(std::string k);
 	bool getMerssage() const;
+	bool topicModeIsOn(void);
 	Client *getAdmin() const;
+	bool isInChannel(Client* channel);
 };
 
 #endif

@@ -76,3 +76,15 @@ void Channel::setKey(std::string k) {
 Client* Channel::getAdmin() const { return admin; }
 
 Channel::~Channel() {}
+
+bool Channel::isInChannel(Client* client)
+{
+    if (std::find(clients.begin(), clients.end(), client) == clients.end())
+        return false;
+    return true;
+}
+
+bool Channel::topicModeIsOn(void)
+{
+    return topicMode;
+}
