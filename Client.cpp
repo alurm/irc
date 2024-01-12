@@ -6,7 +6,10 @@ Client::Client(int fd, int port, const std::string &hostname)
 Client::~Client() {}
 
 int Client::getPort() const { return port; }
-int Client::getFd() const { return fd; }
+int Client::getFd() const { 
+
+    return fd; 
+}
 std::string Client::getNickname() const { return nick_name; }
 std::string Client::getUsername() const { return user_name; }
 std::string Client::getRealname() const { return real_name; }
@@ -23,7 +26,6 @@ void Client::setUsername(const std::string &username) { user_name = username; }
 void Client::setRealname(const std::string &realname) { real_name = realname; }
 void Client::setState(client_state::ClientState state) { status = state; }
 void Client::setChannel(Channel *channel) { chan = channel; }
-
 bool Client::isInRegisteredState() const { return status == client_state::REGISTERED; }
 
 

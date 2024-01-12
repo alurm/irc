@@ -32,6 +32,11 @@ class Channel {
 	Channel(const std::string &name, const std::string &key, Client *admin);
 	~Channel();
 	void handleClientRemoval(Client *client);
+	void setMessage(bool flag);
+	void setLimit(size_t l);
+	void setKey(std::string k);
+	bool getMerssage() const;
+	Client *getAdmin() const;
 };
 
 #endif

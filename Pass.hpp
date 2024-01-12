@@ -28,7 +28,7 @@ class Base2 {
 
 class Pass : public Base2 {
       public:
-	Pass(Server *srv, bool auth);
+	Pass(Server *server, bool auth);
 	~Pass();
 
 	void execute(Client *client, std::vector<std::string> args);
@@ -38,7 +38,7 @@ class Join : public Base2
 {
     public:
 
-        Join(Server* srv,  bool auth);
+        Join(Server* server,  bool auth);
         ~Join();
 
         void    execute(Client* client, std::vector<std::string> args);
@@ -48,7 +48,7 @@ class Nick : public Base2
 {
     public:
 
-        Nick(Server* srv,  bool auth);
+        Nick(Server* server,  bool auth);
         ~Nick();
 
         void    execute(Client* client, std::vector<std::string> args);
@@ -61,6 +61,27 @@ class User : public Base2
 
         User(Server* server,  bool auth);
         ~User();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Quit : public Base2
+{
+    public:
+
+        Quit(Server* server,  bool auth);
+        ~Quit();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+
+class Mode : public Base2
+{
+    public:
+
+        Mode(Server* server,  bool auth);
+        ~Mode();
 
         void    execute(Client* client, std::vector<std::string> args);
 };

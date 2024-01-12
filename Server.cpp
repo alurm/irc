@@ -79,7 +79,7 @@ void Server::connect_client() {
 void Server::disconnectClient(int fd) {
 	try {
 		Client *client = clients.at(fd);
-		// client->handleChannelLeave();
+		client->handleChannelLeave();
 		char message[1000];
 		sprintf(message, "%s:%d has disconnected!",
 			client->getHostname().c_str(), client->getPort());
@@ -160,35 +160,21 @@ struct message Server::get_client_message(int fd) {
 }
 
 void Server::handle_client_message(int fd) {
-	std::cout << "In handle client message\n";
 	try {
-		Client *client = clients.at(fd);
-		(void)client;
-		message message = this->get_client_message(fd);
-		std::cout << "?????\n";
-		// std::cout << "prefix ->> " << message.prefix << std::endl;
-		// std::cout << "command ->> " << message.command << std::endl;
-
-		// if (message.params != nullptr) {
-		// 	std::cout << "params ->> " << message.params[0]
-		// 		  << std::endl;
-		// }
-		/*
-			TODO dispatch(message)
-			.validation for each message
-			.execute
-			.rsponce
-		*/
-		std::vector<std::string> paramsVector;
-		// Iterate through the char** array and convert each char* to
-		// std::string
-		for (int i = 0; i < message.params_count; i++) {
-			std::cout << "in loop \n";
-			std::string param = std::string(message.params[i]);
-			paramsVector.push_back(param);
+		if (clients.count(fd) > 0) {
+			Client *client = clients.at(fd);
+			(void)client;
+			message message = this->get_client_message(fd);
+			std::vector<std::string> paramsVector;
+			for (int i = 0; i < message.params_count; i++) {
+				std::string param =
+				    std::string(message.params[i]);
+				
+				std::cout << "Param in index " << i << "is --->" << param[i] << std::endl;
+				paramsVector.push_back(param);
+			}
+			dispatch(client, message);
 		}
-		std::cout << "here >>>>>> \n";
-		dispatch(client, message);
 	} catch (const std::exception &e) {
 		std::cout << "Error while handling the client message! "
 			  << e.what() << std::endl;
@@ -287,32 +273,32 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "USER") == 0) {
 		command = new User(this, false);
 		std::cout << "in user\n";
-	}
-	// else if (strcmp(m.command, "QUIT") == 0) {
-	// 	command = new Quit(this, false);
-	// 	std::cout << "in quit\n";
-	// } else if (strcmp(m.command, "MODE") == 0) {
-	// 	command = new Mode(this, true);
-	// 	std::cout << "in mode\n";
-	// } else if (strcmp(m.command, "PART") == 0) {
-	// 	command = new Part(this, true);
-	// 	std::cout << "in part\n";
-	// } else if (strcmp(m.command, "PONG") == 0) {
-	// 	command = new Pong(this, true);
-	// 	std::cout << "in pong\n";
-	// } else if (strcmp(m.command, "KICK") == 0) {
-	// 	command = new Kick(this, true);
-	// 	std::cout << "in kick\n";
-	// } else if (strcmp(m.command, "PING") == 0) {
-	// 	command = new Ping(this, true);
-	// 	std::cout << "in ping\n";
-	// } else if (strcmp(m.command, "NOTICE") == 0) {
-	// 	command = new Notice(this, true);
-	// 	std::cout << "in notice\n";
-	// } else if (strcmp(m.command, "PRIVMSG") == 0) {
-	// 	command = new PrivMsg(this, true);
-	// 	std::cout << "in priv_msg\n";
-	// }
+	} else if (strcmp(m.command, "QUIT") == 0) {
+		command = new Quit(this, false);
+		std::cout << "in quit\n";
+	}else if (strcmp(m.command, "MODE") == 0) {
+	  	command = new Mode(this, true);
+	  	std::cout << "in mode\n";
+	} 
+	//else if (strcmp(m.command, "PART") == 0) {
+	//  	command = new Part(this, true);
+	//  	std::cout << "in part\n";
+	//  } else if (strcmp(m.command, "PONG") == 0) {
+	//  	command = new Pong(this, true);
+	//  	std::cout << "in pong\n";
+	//  } else if (strcmp(m.command, "KICK") == 0) {
+	//  	command = new Kick(this, true);
+	//  	std::cout << "in kick\n";
+	//  } else if (strcmp(m.command, "PING") == 0) {
+	//  	command = new Ping(this, true);
+	//  	std::cout << "in ping\n";
+	//  } else if (strcmp(m.command, "NOTICE") == 0) {
+	//  	command = new Notice(this, true);
+	//  	std::cout << "in notice\n";
+	//  } else if (strcmp(m.command, "PRIVMSG") == 0) {
+	//  	command = new PrivMsg(this, true);
+	//  	std::cout << "in priv_msg\n";
+	//  }
 	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
 		c->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c->getNickname()));

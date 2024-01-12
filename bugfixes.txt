@@ -1,0 +1,5 @@
+1. empty line in client input
+2.in user command i am not sure if without trailing last parameter is more
+than 4 need take rest argument too as realname or not
+3. in quit message some key not found error in server is ot normal?
+4.channel join (#)

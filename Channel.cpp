@@ -61,4 +61,18 @@ void Channel::handleClientRemoval(Client *client) {
     }
 }
 
+void Channel::setMessage(bool flag){
+    message = flag;
+}
+bool Channel::getMerssage() const{
+    return message;
+}
+void Channel::setLimit(size_t l) {
+    limit = l;
+}
+void Channel::setKey(std::string k) {
+    key = k;
+}
+Client* Channel::getAdmin() const { return admin; }
+
 Channel::~Channel() {}
