@@ -9,16 +9,17 @@ class Client;
 
 class Channel {
 	typedef std::vector<Client *>::iterator client_iterator;
-
       private:
 	std::string name;
 	Client *admin;
 	std::vector<Client *> clients;
 	std::string key;
-	 std::string  topic;
+	std::string  topic;
 	size_t limit;
 	bool message;
 	bool topicMode;
+	bool inviteOnly;
+	std::vector<Client*> operators;
 	Channel();
 	Channel(const Channel &src);
 
@@ -40,6 +41,13 @@ class Channel {
 	bool topicModeIsOn(void);
 	Client *getAdmin() const;
 	bool isInChannel(Client* channel);
+	bool isInviteOnly(void);
+	void setInviteOnly(bool mode);
+	void setTopicMode(bool mode);
+	bool isOperator(Client *client);
+	void removeOperator(Client *client);
+	void addOperator(Client *client);
+
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
-    : name(name), admin(admin), key(key), limit(0), message(false) {}
+    : name(name), admin(admin), key(key), limit(10), message(false) {}
 
 std::string Channel::getName() const { return name; }
 
@@ -87,4 +87,37 @@ bool Channel::isInChannel(Client* client)
 bool Channel::topicModeIsOn(void)
 {
     return topicMode;
+}
+
+bool Channel::isInviteOnly(void)
+{
+    return inviteOnly;
+}
+void Channel::setInviteOnly(bool mode)
+{
+    inviteOnly = mode;
+}
+void Channel::setTopicMode(bool mode)
+{
+    topicMode = mode;
+}
+bool Channel::isOperator(Client *client)
+{
+    if (std::find(operators.begin(), operators.end(), client) == operators.end())
+        return false;
+    return true;
+}
+
+void Channel::addOperator(Client *client)
+{
+    if (isInChannel(client) && !isOperator(client))
+        operators.push_back(client);
+}
+void Channel::removeOperator(Client *client)
+{
+    if (isOperator(client))
+    {
+        std::vector<Client*>::iterator it = std::find(operators.begin(), operators.end(), client);
+        operators.erase(it);
+    }
 }

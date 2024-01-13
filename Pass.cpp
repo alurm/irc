@@ -39,29 +39,32 @@ Join::Join(Server *server, bool auth) : Base2(server, auth) {}
 Join::~Join() {}
 
 void Join::execute(Client *client, std::vector<std::string> args) {
-	std::cout << "In join\n";
-
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "JOIN"));
 		return;
 	}
-	std::cout << "not empty\n";
 	std::string name = args[0];
 	std::string pass = args.size() > 1 ? args[1] : "";
-	std::cout << "Before channel get\n";
-	Channel *channel = client->getChannel();
-	std::cout << "After channel get\n";
-	if (channel) {
-		client->respondWithPrefix(IRCResponse::ERR_TOOMANYCHANNELS(
-		    client->getNickname(), name));
+	if (name[0] != '#' && name[0] != '&') {
+		client->respondWithPrefix(
+		    IRCResponse::ERR_BADCHANMASK(client->getNickname(), name));
 		return;
 	}
-
+	Channel *channel = server->getChannel(name);
 	channel = server->getChannel(name);
 	if (!channel)
 		channel = server->addChannel(name, pass, client);
-
+	if (channel) {
+		client->respondWithPrefix(IRCResponse::ERR_USERONCHANNEL(
+		    client->getNickname(), name));
+		return;
+	}
+	if (channel->isInviteOnly()) {
+		client->respondWithPrefix(IRCResponse::ERR_INVITEONLYCHAN(
+		    client->getNickname(), name));
+		return;
+	}
 	if (channel->getLimit() > 0 &&
 	    channel->getClientCount() >= channel->getLimit()) {
 		client->respondWithPrefix(IRCResponse::ERR_CHANNELISFULL(
@@ -90,11 +93,10 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_NONICKNAMEGIVEN(client->getNickname()));
 		return;
 	}
-
 	std::string nickname = args[0];
 	if (!client->nickIsCorrect(nickname)) {
-		client->respondWithPrefix(
-		    IRCResponse::ERR_ERRONEUSNICKNAME(client->getNickname(), nickname));
+		client->respondWithPrefix(IRCResponse::ERR_ERRONEUSNICKNAME(
+		    client->getNickname(), nickname));
 		return;
 	}
 	if (server->getClient(nickname)) {
@@ -163,65 +165,33 @@ void Mode::execute(Client *client, std::vector<std::string> args) {
 
 	std::string target = args.at(0);
 
-	Channel *channel =
-	    server->getChannel(target); // MODE on clients not implemented
+	Channel *channel = server->getChannel(target);
 	if (!channel) {
 		client->respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
 		    client->getNickname(), target));
 		return;
 	}
-
-	if (channel->getAdmin() != client) {
+	if (!channel->isInChannel(client)) {
+		client->respondWithPrefix(IRCResponse::ERR_NOTONCHANNEL(
+		    client->getNickname(), target));
+		return;
+	}
+	if (!channel->isOperator(client)) {
 		client->respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
 		    client->getNickname(), target));
 		return;
 	}
 
-	// changing the mode
-
-	int i = 0, p = 2;
-	char c;
-	// TODO i o t modes
-	while ((c = args[1][i])) {
-		char prev_c = i > 0 ? args[1][i - 1] : '\0';
-		bool active = prev_c == '+';
-
-		switch (c) {
-		case 'n': {
-			channel->setMessage(active);
-			channel->sendAll(IRCResponse::RPL_MODE(
-			    client->getPrefix(), channel->getName(),
-			    (active ? "+n" : "-n"), ""));
-			break;
-		}
-		case 'l': {
-			channel->setLimit(active ? atoi(args[p].c_str()) : 0);
-			channel->sendAll(IRCResponse::RPL_MODE(
-			    client->getPrefix(), channel->getName(),
-			    (active ? "+l" : "-l"), (active ? args[p] : "")));
-			p += active ? 1 : 0;
-			break;
-		}
-		case 'k': {
-			channel->setKey(active ? args[p] : "");
-			channel->sendAll(IRCResponse::RPL_MODE(
-			    client->getPrefix(), channel->getName(),
-			    (active ? "+k" : "-k"), (active ? args[p] : "")));
-			p += active ? 1 : 0;
-			break;
-		}
-		default:
-			break;
-		}
-		i++;
-	}
+	// else {
+	// 	client->respondWithPrefix(IRCResponse::ERR_UNKNOWNMODE(
+	// 	    client->getNickname(), mode,
+	// 	    " :is an unknown mode char to me"));
+	// 	return;
+	// }
 }
-
 // topic
 Topic::Topic(Server *server, bool auth) : Base2(server, auth) {}
 
 Topic::~Topic() {}
 
-void Topic::execute(Client *client, std::vector<std::string> args) {
-
-}
+void Topic::execute(Client *client, std::vector<std::string> args) {}

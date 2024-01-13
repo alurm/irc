@@ -92,4 +92,17 @@ public:
     static std::string ERR_ERRONEUSNICKNAME(const std::string &source, const std::string &command)  {
         return "432 " + source + " " + command + " :Erroneous nickname";
     }
+    static std::string ERR_USERONCHANNEL(const std::string &user, const std::string &channel)  {
+        return "443 " + user + " " + channel + ":is already on channel";
+    }
+    static std::string ERR_BADCHANMASK(const std::string &source, const std::string &command)  {
+        return "476 " + source + " " + command + " :Bad Channel Mask";
+    }
+    static std::string ERR_INVITEONLYCHAN(const std::string &source, const std::string &command) {
+        return  "473 " + source + " " + command + " :Cannot join channel (+i)";
+    }
+    static std::string RPL_CHANNELMODEIS(const std::string &nickname, const std::string &channel, const std::string &modes)
+    {
+        return "324 " + nickname + " " + channel + " " + modes;
+    }
 };
