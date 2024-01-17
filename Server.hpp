@@ -15,7 +15,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 // #include "Base2.hpp"
-#include "Pass.hpp"
+#include "Command.hpp"
 #include "Utils.hpp"
 #define MAX_CLIENTS 100
 

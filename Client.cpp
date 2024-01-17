@@ -108,3 +108,13 @@ void Client::handleChannelLeave() {
 	std::string message = nick_name + " has left the channel " + name;
 	std::cout << message << std::endl;
 }
+
+Client *Channel::getClientByNick(std::string nickname)
+{
+    std::vector<Client*>::iterator it = clients.begin();
+    for( ; it != clients.end(); ++it)
+        if ((*it)->getNickname() == nickname)
+            return (*it);
+
+    return NULL;
+}

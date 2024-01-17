@@ -171,11 +171,12 @@ void Server::handle_client_message(int fd) {
 			for (int i = 0; i < message.params_count; i++) {
 				std::string param =
 				    std::string(message.params[i]);
-				
-				std::cout << "Param in index " << i << "is --->" << param << std::endl;
+
+				std::cout << "Param in index " << i << "is --->"
+					  << param << std::endl;
 				paramsVector.push_back(param);
 			}
-			if(message.command) {
+			if (message.command) {
 				dispatch(client, message);
 			}
 		}
@@ -272,15 +273,15 @@ void Server::dispatch(Client *c, message m) {
 	std::vector<std::string> args;
 
 	Base2 *command = NULL;
-	
-	// if(m) {
-		for (int i = 0; i < m.params_count; ++i) {
-			args.push_back(std::string(m.params[i]));
-			delete[] m.params[i];
-		}
 
-		delete[] m.params;
-		m.params = NULL;
+	// if(m) {
+	for (int i = 0; i < m.params_count; ++i) {
+		args.push_back(std::string(m.params[i]));
+		delete[] m.params[i];
+	}
+
+	delete[] m.params;
+	m.params = NULL;
 	// }
 
 	if (strcmp(m.command, "PASS") == 0) {
@@ -298,38 +299,47 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "QUIT") == 0) {
 		command = new Quit(this, false);
 		std::cout << "in quit\n";
-	}else if (strcmp(m.command, "MODE") == 0) {
-	  	command = new Mode(this, true);
-	  	std::cout << "in mode\n";
-	}else if(strcmp(m.command, "TOPIC") == 0) {
+	} else if (strcmp(m.command, "MODE") == 0) {
+		command = new Mode(this, true);
+		std::cout << "in mode\n";
+	} else if (strcmp(m.command, "TOPIC") == 0) {
 		command = new Topic(this, true);
 		std::cout << "in topic\n";
+	} else if (strcmp(m.command, "PING") == 0) {
+		command = new Ping(this, true);
+		std::cout << "in ping\n";
+	} else if (strcmp(m.command, "PRIVMSG") == 0) {
+		command = new PrivMsg(this, true);
+		std::cout << "in priv_msg\n";
+	} else if (strcmp(m.command, "PONG") == 0) {
+		command = new Pong(this, true);
+		std::cout << "in pong\n";
+	} else if (strcmp(m.command, "KICK") == 0) {
+	  	command = new Kick(this, true);
+	  	std::cout << "in kick\n";
+	}else if (strcmp(m.command, "INVIITE") == 0) {
+	  	command = new Invite(this, true);
+	  	std::cout << "in invite\n";
+	}else if (strcmp(m.command, "PART") == 0) {
+	  	command = new Part(this, true);
+	  	std::cout << "in invite\n";
+	}else if (strcmp(m.command, "WHO") == 0) {
+	  	command = new Who(this, true);
+	  	std::cout << "in who\n";
 	}
 	else {
 		std::cout << ">>>>>" << m.command << std::endl;
-		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(c->getNickname(), m.command));
+		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
+		    c->getNickname(), m.command));
 		return;
 	}
-	//else if (strcmp(m.command, "PART") == 0) {
-	//  	command = new Part(this, true);
-	//  	std::cout << "in part\n";
-	// } 
-	//else if (strcmp(m.command, "PONG") == 0) {
-	//  	command = new Pong(this, true);
-	//  	std::cout << "in pong\n";
-	//  } else if (strcmp(m.command, "KICK") == 0) {
-	//  	command = new Kick(this, true);
-	//  	std::cout << "in kick\n";
-	//  } else if (strcmp(m.command, "PING") == 0) {
-	//  	command = new Ping(this, true);
-	//  	std::cout << "in ping\n";
-	//  } else if (strcmp(m.command, "NOTICE") == 0) {
-	//  	command = new Notice(this, true);
-	//  	std::cout << "in notice\n";
-	//  } else if (strcmp(m.command, "PRIVMSG") == 0) {
-	//  	command = new PrivMsg(this, true);
-	//  	std::cout << "in priv_msg\n";
+
+	// else if (strcmp(m.command, "PART") == 0) {
+	//   	command = new Part(this, true);
+	//   	std::cout << "in part\n";
 	//  }
+
+
 	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
 		c->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c->getNickname()));
@@ -343,10 +353,3 @@ void Server::dispatch(Client *c, message m) {
 		delete command;
 	}
 }
-
-// void Server::broadcastToChannelsInClientChannels(const std::string &message,
-// 						 Channel *channels) {
-// 	for (size_t i = 0; channels[i] != nullptr; ++i) {
-// 		channels[i]->broadcast(message);
-// 	}
-// }

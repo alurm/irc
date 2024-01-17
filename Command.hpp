@@ -1,5 +1,5 @@
-#ifndef PASS_HPP
-#define PASS_HPP
+#ifndef COMMAND_HPP
+#define COMMAND_HPP
 
 #include "Client.hpp"
 #include "IRCResponse.hpp"
@@ -95,4 +95,75 @@ class Topic : public Base2
 
         void    execute(Client* client, std::vector<std::string> args);
 };
+
+class Ping : public Base2
+{
+    public:
+
+        Ping(Server* server,  bool auth);
+        ~Ping();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class PrivMsg : public Base2
+{
+    public:
+
+        PrivMsg(Server* server,  bool auth);
+        ~PrivMsg();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Pong : public Base2
+{
+    public:
+
+        Pong(Server* server,  bool auth);
+        ~Pong();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Kick : public Base2
+{
+    public:
+
+        Kick(Server* server,  bool auth);
+        ~Kick();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Invite : public Base2
+{
+    public:
+
+        Invite(Server* server,  bool auth);
+        ~Invite();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Part : public Base2
+{
+    public:
+
+        Part(Server* server,  bool auth);
+        ~Part();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
+class Who : public Base2
+{
+    public:
+
+        Who(Server* server,  bool auth);
+        ~Who();
+
+        void    execute(Client* client, std::vector<std::string> args);
+};
+
 #endif

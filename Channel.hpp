@@ -9,17 +9,18 @@ class Client;
 
 class Channel {
 	typedef std::vector<Client *>::iterator client_iterator;
+
       private:
 	std::string name;
 	Client *admin;
 	std::vector<Client *> clients;
 	std::string key;
-	std::string  topic;
+	std::string topic;
 	size_t limit;
 	bool message;
 	bool topicMode;
 	bool inviteOnly;
-	std::vector<Client*> operators;
+	std::vector<Client *> operators;
 	Channel();
 	Channel(const Channel &src);
 
@@ -40,14 +41,26 @@ class Channel {
 	bool getMerssage() const;
 	bool topicModeIsOn(void);
 	Client *getAdmin() const;
-	bool isInChannel(Client* channel);
+	bool isInChannel(Client *channel);
 	bool isInviteOnly(void);
 	void setInviteOnly(bool mode);
 	void setTopicMode(bool mode);
 	bool isOperator(Client *client);
 	void removeOperator(Client *client);
 	void addOperator(Client *client);
-
+	Client *getClientByNick(std::string nickname);
+	bool isAdmin(Client *client);
+	void setChannelLimit(int l);
+	std::string getTopic(void);
+	void setTopic(const std::string &t);
+	void sending(Client *client, const std::string &msg,
+		     const std::string &cmd);
+	void kick(Client *client, Client *target, const std::string &reason);
+	void removeClient(Client *client);
+	void broadcast(const std::string &message, Client *exclude);
+	void broadcast(const std::string &message);
+	bool channelIsFull(void);
+	void replyWho(Client* client, int mode);
 };
 
 #endif
