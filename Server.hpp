@@ -46,10 +46,6 @@ class Server {
 	std::string getPassword() const;
 	Client *getClient(const std::string &nickname);
 	Channel *getChannel(const std::string &name);
-
-	// void broadcastToChannelsInClientChannels(const std::string &message,
-	// 					 Channel *channels);
-
 	Channel *addChannel(const std::string &name, const std::string &key,
 			    Client *client);
 };

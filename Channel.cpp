@@ -1,7 +1,9 @@
 #include "Channel.hpp"
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
-    : name(name), admin(admin), key(key), limit(10), message(false) {}
+    : name(name), admin(admin), key(key), limit(10), message(false) {
+		operators.push_back(admin);
+	}
 
 std::string Channel::getName() const { return name; }
 
@@ -194,3 +196,4 @@ void Channel::replyWho(Client *client, int mode)
     }
     client->sendWithLineEnding(IRCResponse::RPL_ENDOFWHO(client->getNickname(), name));
 }
+void Channel::add_client(Client *client) { clients.push_back(client); }

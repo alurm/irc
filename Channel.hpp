@@ -27,7 +27,7 @@ class Channel {
       public:
 	void sendAll(const std::string &message);
 	std::string getName() const;
-	void add_client(Client *client) { clients.push_back(client); }
+	void add_client(Client *client);
 	std::string getKey() const;
 	size_t getLimit() const;
 	size_t getClientCount() const;

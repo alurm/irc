@@ -113,15 +113,21 @@ struct message Server::get_client_message(int fd) {
 	char buffer[1024];
 	int bytesRead;
 
-	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-
+	// bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+	while ((bytesRead = recv(fd, buffer, sizeof(buffer), 0)) > 0) {
+		message.append(buffer, bytesRead);
+		if (message.find("\r\n") != std::string::npos) {
+			break;
+		}
+	}
 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
 		std::cout << "Error occurred during recv: " << strerror(errno)
 			  << std::endl;
 		throw std::runtime_error(
 		    "Error while reading buffer from a client!");
 	}
-	message.append(buffer);
+	// message.append(buffer);
+
 	std::cout << "message is " << message << std::endl;
 	std::stringstream ss(message);
 	std::string syntax;
@@ -153,6 +159,8 @@ struct message Server::get_client_message(int fd) {
 		for (size_t i = 0; i < parsedMessages.size(); ++i) {
 			if (parsedMessages[i].tag == parseme::message) {
 				m = parsedMessages[i].value.message;
+				std::cout << "command is " << m.command
+					  << std::endl;
 			}
 		}
 	} else {
@@ -315,19 +323,18 @@ void Server::dispatch(Client *c, message m) {
 		command = new Pong(this, true);
 		std::cout << "in pong\n";
 	} else if (strcmp(m.command, "KICK") == 0) {
-	  	command = new Kick(this, true);
-	  	std::cout << "in kick\n";
-	}else if (strcmp(m.command, "INVIITE") == 0) {
-	  	command = new Invite(this, true);
-	  	std::cout << "in invite\n";
-	}else if (strcmp(m.command, "PART") == 0) {
-	  	command = new Part(this, true);
-	  	std::cout << "in invite\n";
-	}else if (strcmp(m.command, "WHO") == 0) {
-	  	command = new Who(this, true);
-	  	std::cout << "in who\n";
-	}
-	else {
+		command = new Kick(this, true);
+		std::cout << "in kick\n";
+	} else if (strcmp(m.command, "INVITE") == 0) {
+		command = new Invite(this, true);
+		std::cout << "in invite\n";
+	} else if (strcmp(m.command, "PART") == 0) {
+		command = new Part(this, true);
+		std::cout << "in invite\n";
+	} else if (strcmp(m.command, "WHO") == 0) {
+		command = new Who(this, true);
+		std::cout << "in who\n";
+	} else {
 		std::cout << ">>>>>" << m.command << std::endl;
 		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
 		    c->getNickname(), m.command));
@@ -339,7 +346,6 @@ void Server::dispatch(Client *c, message m) {
 	//   	std::cout << "in part\n";
 	//  }
 
-
 	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
 		c->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c->getNickname()));
@@ -349,6 +355,7 @@ void Server::dispatch(Client *c, message m) {
 		return;
 	}
 	if (command != NULL) {
+		std::cout << "before execute\n";
 		command->execute(c, args);
 		delete command;
 	}

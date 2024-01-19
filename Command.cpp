@@ -46,16 +46,19 @@ void Join::execute(Client *client, std::vector<std::string> args) {
 	}
 	std::string name = args[0];
 	std::string pass = args.size() > 1 ? args[1] : "";
-	if (name[0] != '#' && name[0] != '&') {
-		client->respondWithPrefix(
-		    IRCResponse::ERR_BADCHANMASK(client->getNickname(), name));
-		return;
-	}
+	// if (name[0] != '#' && name[0] != '&') {
+	// 	client->respondWithPrefix(
+	// 	    IRCResponse::ERR_BADCHANMASK(client->getNickname(), name));
+	// 	return;
+	// }
 	Channel *channel = server->getChannel(name);
-	channel = server->getChannel(name);
+
 	if (!channel)
+	{
 		channel = server->addChannel(name, pass, client);
-	if (channel) {
+		
+	}
+	if (channel->isInChannel(client)) {
 		client->respondWithPrefix(IRCResponse::ERR_USERONCHANNEL(
 		    client->getNickname(), name));
 		return;
@@ -77,7 +80,7 @@ void Join::execute(Client *client, std::vector<std::string> args) {
 		    client->getNickname(), name));
 		return;
 	}
-
+	std::cout << "befor join handle\n";
 	client->handleChannelJoin(channel);
 }
 
