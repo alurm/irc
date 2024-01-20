@@ -160,7 +160,7 @@ parseme parse(lexeme l, parse_state *p) {
 	}
 	case lexeme::word: {
 		char *word = l.value.word;
-		// assert(strlen(word) != 0);
+		assert(strlen(word) != 0);
 		if (word[0] == ':'  && p->words.size() == 0) {
 			assert(p->words.size() == 0);
 			char *without_colon = word + 1;

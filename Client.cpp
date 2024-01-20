@@ -51,7 +51,6 @@ void Client::sendWithLineEnding(const std::string &message) const {
     }
 }
 
-
 void Client::respondWithPrefix(const std::string &message) {
 	this->sendWithLineEnding(":" + getPrefix() + " " + message);
 }

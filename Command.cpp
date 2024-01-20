@@ -12,6 +12,7 @@ Pass::Pass(Server *server, bool auth) : Base2(server, auth) {}
 Pass::~Pass() {}
 
 void Pass::execute(Client *client, std::vector<std::string> args) {
+	std::cout << "here in execute of pass\n";
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "PASS"));
@@ -25,6 +26,7 @@ void Pass::execute(Client *client, std::vector<std::string> args) {
 	}
 
 	if (server->getPassword() != args[0]) {
+		std::cout << "not match\n";
 		client->respondWithPrefix(
 		    IRCResponse::ERR_PASSWDMISMATCH(client->getNickname()));
 		return;
@@ -382,7 +384,7 @@ Ping::~Ping() {}
 void Ping::execute(Client *client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client->getNickname(), "PONG"));
+		    client->getNickname(), "PING"));
 		return;
 	}
 	client->sendWithLineEnding(

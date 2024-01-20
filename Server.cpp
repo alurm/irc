@@ -120,6 +120,7 @@ struct message Server::get_client_message(int fd) {
 			break;
 		}
 	}
+
 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
 		std::cout << "Error occurred during recv: " << strerror(errno)
 			  << std::endl;
@@ -138,12 +139,14 @@ struct message Server::get_client_message(int fd) {
 		message.replace(lastNewlinePos, 1, "\r\n");
 	}
 	std::cout << "Modified message is " << message << std::endl;
+	std::string trimmedMessage = trim(message);
 	lex_state lexerState = {
 	    .state = lex_state::in_word,
 	    .word = "",
 	    .in_trailing = false,
 	};
-	std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
+	std::vector<lexeme> lexemes =
+	    lex_string(trimmedMessage.c_str(), &lexerState);
 	if (lexemes.empty()) {
 		std::cout << "lexemes are empty\n";
 	}
@@ -212,12 +215,12 @@ void Server::start() {
 				continue;
 			}
 
-			if (it->revents & POLLHUP) {
+			if ((it->revents & POLLHUP) == POLLHUP) {
 				disconnectClient(it->fd);
 				break;
 			}
 
-			if (it->revents & POLLIN) {
+			if ((it->revents & POLLIN) == POLLIN) {
 				if (it->fd == sock) {
 					connect_client();
 					break;
@@ -258,22 +261,6 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 	return channel;
 }
 
-// "PASS"
-// "NICK"
-// "USER"
-// "PING"
-// "PONG"
-// "CAP"
-// "JOIN"
-// "PRIVMSG"
-// "KICK"
-// "INVITE"
-// "MODE"
-// "WHO"
-// "QUIT"
-// "TOPIC"
-// "PART"
-
 void Server::dispatch(Client *c, message m) {
 
 	std::cout << "Status is " << c->status << std::endl;
@@ -282,7 +269,6 @@ void Server::dispatch(Client *c, message m) {
 
 	Base2 *command = NULL;
 
-	// if(m) {
 	for (int i = 0; i < m.params_count; ++i) {
 		args.push_back(std::string(m.params[i]));
 		delete[] m.params[i];
@@ -290,7 +276,6 @@ void Server::dispatch(Client *c, message m) {
 
 	delete[] m.params;
 	m.params = NULL;
-	// }
 
 	if (strcmp(m.command, "PASS") == 0) {
 		command = new Pass(this, false);
@@ -335,16 +320,10 @@ void Server::dispatch(Client *c, message m) {
 		command = new Who(this, true);
 		std::cout << "in who\n";
 	} else {
-		std::cout << ">>>>>" << m.command << std::endl;
 		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
 		    c->getNickname(), m.command));
 		return;
 	}
-
-	// else if (strcmp(m.command, "PART") == 0) {
-	//   	command = new Part(this, true);
-	//   	std::cout << "in part\n";
-	//  }
 
 	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
 		c->respondWithPrefix(

@@ -13,7 +13,7 @@ class IRCResponse {
 		return "462 " + str + " :You may not register";
 	}
 	static std::string ERR_PASSWDMISMATCH(const std::string &str) {
-		return "464 " + str + " :Password is incorrect";
+		return str + " :Password is incorrect";
 	}
 	static std::string ERR_NONICKNAMEGIVEN(const std::string &str) {
 		return "431 " + str + " :Nickname not given";

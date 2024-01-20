@@ -12,5 +12,5 @@ class Server;
 //struct message;
 
 int countParams(char **params);
-
+std::string trim(const std::string& str);
 #endif
