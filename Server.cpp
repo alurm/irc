@@ -319,7 +319,10 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "WHO") == 0) {
 		command = new Who(this, true);
 		std::cout << "in who\n";
-	} else {
+	} else if(strcmp(m.command, "")){
+		std::cout << "empty\n";
+		return ;
+	}else {
 		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
 		    c->getNickname(), m.command));
 		return;

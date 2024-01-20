@@ -391,10 +391,6 @@ void Ping::execute(Client *client, std::vector<std::string> args) {
 	    IRCResponse::RPL_PING(client->getPrefix(), args[0]));
 }
 
-// Cap >?>
-
-// idk for what is it
-
 // PrivMsg
 
 PrivMsg::PrivMsg(Server *server, bool auth) : Base2(server, auth) {}
