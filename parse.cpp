@@ -160,8 +160,17 @@ parseme parse(lexeme l, parse_state *p) {
 	}
 	case lexeme::word: {
 		char *word = l.value.word;
+		if (strlen(word) == 0) {
+			// Print debugging information and skip processing empty
+			// word.
+			std::cout
+			    << "Warning: Encountered empty word in lexeme."
+			    << std::endl;
+			free(word);
+			return (parseme){.tag = parseme::nothing};
+		}
 		// assert(strlen(word) != 0);
-		if (word[0] == ':'  && p->words.size() == 0) {
+		if (word[0] == ':' && p->words.size() == 0) {
 			assert(p->words.size() == 0);
 			char *without_colon = word + 1;
 			assert(without_colon != 0);
@@ -185,7 +194,7 @@ parseme parse(lexeme l, parse_state *p) {
 		}
 		break;
 	}
-	default: 
+	default:
 		return (parseme){.tag = parseme::error};
 	}
 }
