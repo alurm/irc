@@ -16,7 +16,7 @@ class IRCResponse {
 		return str + " :Password is incorrect";
 	}
 	static std::string ERR_NONICKNAMEGIVEN(const std::string &str) {
-		return "431 " + str + " :Nickname not given";
+		return "431 " + str + " :No nickname given";
 	}
 	static std::string ERR_NICKNAMEINUSE(const std::string &str) {
 		return "433 " + str + " " + str +
@@ -213,3 +213,8 @@ class IRCResponse {
 	// 	       " ft_irc " + nick + " " + fl + " :" + re;
 	// }
 };
+
+
+
+// ERR_USERONCHANNEL(src, com1, com2) ----> "443 " + src + " " + com1 + " " + com2 + " :is already on channel"
+//RPL_CHANNELMODEIS(channelName1, channelName2, mode_params) -------> "324 " + channelName1 + " " + channelName2 + " " + " " + mode_params

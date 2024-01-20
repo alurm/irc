@@ -26,7 +26,6 @@ void Pass::execute(Client *client, std::vector<std::string> args) {
 	}
 
 	if (server->getPassword() != args[0]) {
-		std::cout << "not match\n";
 		client->respondWithPrefix(
 		    IRCResponse::ERR_PASSWDMISMATCH(client->getNickname()));
 		return;
