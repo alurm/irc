@@ -4,3 +4,4 @@
 *.dSYM
 *.o
 *.d
+/generated_makefiles
