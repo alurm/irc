@@ -2,7 +2,11 @@
 
 cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
 
-test : $(addprefix objects/, $(addsuffix .o, test parse)) Makefile
+.PHONY : test
+test : objects/test
+	./objects/test
+
+objects/test : $(addprefix objects/, $(addsuffix .o, test parse)) Makefile
 	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
 validation : $(addprefix objects/, $(addsuffix .o, Utils Server validation Client validation parse Command Channel)) Makefile
