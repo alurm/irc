@@ -49,6 +49,7 @@ lexeme lex(char c, lex_state *l) {
 			char *word = strdup(l->word.c_str());
 			assert(word != 0);
 			l->word = "";
+			std::cout << "WORD " << word << std::endl;
 			return (lexeme){
 			    .tag = lexeme::word,
 			    .value.word = word,
@@ -59,10 +60,18 @@ lexeme lex(char c, lex_state *l) {
 		break;
 	case lex_state::out_of_word:
 		if (c == '\r') {
+			if (l->word.empty()) {
+				l->state = lex_state::carriage_return_found;
+				return (lexeme){
+					.tag = lexeme::nothing
+				};
+			}
+
 			char *word = strdup(l->word.c_str());
 			assert(word != 0);
 			l->word = "";
 			l->state = lex_state::carriage_return_found;
+
 			return (lexeme){
 			    .tag = lexeme::word,
 			    .value.word = word,
