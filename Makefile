@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := validation
+.DEFAULT_GOAL := test
 
 cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
 
