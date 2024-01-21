@@ -218,18 +218,24 @@ void generic_parser_test() {
 	// }
 }
 
+#define STRING_COMMA_SYMBOL(SYMBOL) #SYMBOL, SYMBOL
+
 int main() {
 	struct test {
+		const char *name;
 		void (*test)();
 		bool run;
 	} tests[] = {
-		{ pass_test, false },
-		{ generic_parser_test, true },
+		{ STRING_COMMA_SYMBOL(pass_test), true },
+		{ STRING_COMMA_SYMBOL(generic_parser_test), true },
 	};
 
 	for (unsigned long i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
 		struct test t = tests[i];
-		if (t.run)
+		std::cout << t.name << std::endl;
+		if (t.run) {
+
 			t.test();
+		}
 	}
 }

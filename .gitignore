@@ -4,6 +4,7 @@
 /validation
 /.idea
 /generated_makefiles
+/objects
 *.dSYM
 *.o
 *.d
