@@ -1,9 +1,18 @@
--Wall
--Wextra
--Werror
--g
--fsanitize=undefined
--M
--MM
--MP
-validation.cpp
+validation.o: validation.cpp Server.hpp Channel.hpp Client.hpp \
+  IRCResponse.hpp State.hpp Parser.hpp Pass.hpp Utils.hpp
+
+Server.hpp:
+
+Channel.hpp:
+
+Client.hpp:
+
+IRCResponse.hpp:
+
+State.hpp:
+
+Parser.hpp:
+
+Pass.hpp:
+
+Utils.hpp:

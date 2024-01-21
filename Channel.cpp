@@ -25,24 +25,6 @@ void    Channel::sendAll(const std::string &message) {
     }
 }
 
-// void    Channel::broadcast(const std::string& message, Client* exclude)
-// {
-//     client_iterator it_b = clients.begin();
-//     client_iterator it_e = clients.end();
-
-//     while (it_b != it_e)
-//     {
-//         if (*it_b == exclude)
-//         {
-//             it_b++;
-//             continue;
-//         }
-
-//         (*it_b)->sendWithLineEnding(message);
-//         it_b++;
-//     }
-// }
-
 std::string Channel::getKey() const { return key; }
 
 size_t Channel::getLimit() const {
