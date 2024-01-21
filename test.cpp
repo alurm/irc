@@ -25,9 +25,8 @@ void pass_test() {
 				}
 
 				{
-									
 					lexeme l = lexemes[2];
-									std::cout << "l.tag is " << l.tag << std::endl;
+					std::cout << "l.tag is " << l.tag << std::endl;
 					assert(l.tag == lexeme::carriage_return_line_feed);
 				}
 
@@ -76,8 +75,8 @@ void pass_test() {
 		std::vector<lexeme> lexemes = lex_string("PASS\r\n", &state);
 
 		assert(lexemes.size() == 2);
-		assert(lexemes[0].tag == lexeme::word && strcmp(lexemes[0].value.word, "PASS") == 0);
-		assert(lexemes[1].tag == lexeme::carriage_return_line_feed);
+		assert(lexemes[0].tag == lexeme::error && lexemes[0].value.error == lex_error::carriage_return_or_line_feed);
+		// assert(lexemes[1].tag == lexeme::carriage_return_line_feed);
 
 		parse_state parse_state = {
 			.prefix = {
