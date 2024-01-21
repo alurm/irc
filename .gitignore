@@ -1,6 +1,7 @@
 /a.out
 /.vscode
 /test
+/validation
 /.idea
 /generated_makefiles
 *.dSYM
