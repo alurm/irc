@@ -96,6 +96,11 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_NONICKNAMEGIVEN(client->getNickname()));
 		return;
 	}
+	if(client->status != client_state::LOGIN) {
+		client->respondWithPrefix(
+		    IRCResponse::ERR_NOTREGISTERED(client->getNickname()));
+		return ;
+	}	
 	std::string nickname = args[0];
 	if (!client->nickIsCorrect(nickname)) {
 		client->respondWithPrefix(IRCResponse::ERR_ERRONEUSNICKNAME(
@@ -122,7 +127,12 @@ void User::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_ALREADYREGISTERED(client->getNickname()));
 		return;
 	}
-
+	if(client->status != client_state::LOGIN) {
+		std::cout << "2222\n";
+		client->respondWithPrefix(
+		    IRCResponse::ERR_NOTREGISTERED(client->getNickname()));
+		return ;
+	}	
 	if (args.size() < 4) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "USER"));
