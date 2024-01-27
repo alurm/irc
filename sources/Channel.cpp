@@ -211,6 +211,6 @@ std::vector<Client *> Channel::getOperators() const{
 void Channel::sending(Client* C, const std::string& msg, const std::string& cmd)
 {
     for (size_t i = 0; i < clients.size(); ++i)
-        // if (clients[i] != C)
+        if (clients[i] != C)
             clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(C->getPrefix(), cmd, name, msg));
 }

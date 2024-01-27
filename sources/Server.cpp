@@ -136,15 +136,23 @@ struct message Server::get_client_message(int fd) {
 	}
 	message.append(buffer);
 
+ 	size_t found = message.find("[");
+	size_t found1 = message.find("[");
+	size_t found2 = message.find("{");
+    if (found != std::string::npos) {
+        std::cout << "String contains []" << std::endl;
+    } else {
+        std::cout << "String does not contain []" << std::endl;
+    }
 	std::cout << "message is " << message << std::endl;
 	std::stringstream ss(message);
 	std::string syntax;
 
 	std::cout << "bull" << (message.back() == '\n') << std::endl;
-	// size_t lastNewlinePos = message.find_last_of('\n');
-	// if (lastNewlinePos != std::string::npos) {
-	// 	message.replace(lastNewlinePos, 1, "\r\n");
-	// }
+	size_t lastNewlinePos = message.find_last_of('\n');
+	if (lastNewlinePos != std::string::npos) {
+		message.replace(lastNewlinePos, 1, "\r\n");
+	}
 	std::cout << "Modified message is " << message << std::endl;
 	std::string trimmedMessage = trim(message);
 	lex_state lexerState = {
@@ -153,7 +161,7 @@ struct message Server::get_client_message(int fd) {
 	    .in_trailing = false,
 	};
 	std::vector<lexeme> lexemes =
-	    lex_string(trimmedMessage.c_str(), &lexerState);
+	    lex_string(message.c_str(), &lexerState);
 	if (lexemes.empty()) {
 		std::cout << "lexemes are empty\n";
 	}
