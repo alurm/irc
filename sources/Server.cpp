@@ -3,6 +3,7 @@
 Server::Server(const std::string &port, const std::string &pass)
     : port(port), host("127.0.0.1"), pass(pass) {
 	sock = initializeSocket();
+	running = 1;
 }
 
 int Server::initializeSocket() {
@@ -24,7 +25,7 @@ int Server::initializeSocket() {
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(atoi(port.c_str()));
 
-	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),
+	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),	
 		 sizeof(serv_addr)) < 0) {
 		throw std::runtime_error("Error: Failed to bind the socket.");
 	}
