@@ -2,6 +2,8 @@
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
     : name(name), admin(admin), key(key), limit(10), message(false) {
+		inviteOnly = false;
+		topicMode = false;
 		operators.push_back(admin);
 	}
 
@@ -209,6 +211,6 @@ std::vector<Client *> Channel::getOperators() const{
 void Channel::sending(Client* C, const std::string& msg, const std::string& cmd)
 {
     for (size_t i = 0; i < clients.size(); ++i)
-        if (clients[i] != C)
+        // if (clients[i] != C)
             clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(C->getPrefix(), cmd, name, msg));
 }

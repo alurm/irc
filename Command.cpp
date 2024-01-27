@@ -54,8 +54,7 @@ void Join::execute(Client *client, std::vector<std::string> args) {
 	}
 	Channel *channel = server->getChannel(name);
 
-	if (!channel)
-	{
+	if (!channel) {
 		channel = server->addChannel(name, pass, client);
 	}
 	if (channel->isInChannel(client)) {
@@ -96,11 +95,12 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_NONICKNAMEGIVEN(client->getNickname()));
 		return;
 	}
-	if(client->status != client_state::LOGIN && client->status != client_state::REGISTERED) {
+	if (client->status != client_state::LOGIN &&
+	    client->status != client_state::REGISTERED) {
 		client->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(client->getNickname()));
-		return ;
-	}	
+		return;
+	}
 	std::string nickname = args[0];
 	if (!client->nickIsCorrect(nickname)) {
 		client->respondWithPrefix(IRCResponse::ERR_ERRONEUSNICKNAME(
@@ -112,20 +112,13 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_NICKNAMEINUSE(client->getNickname()));
 		return;
 	}
-    std::string oldNickname = client->getNickname();
+	std::string oldNickname = client->getNickname();
 
-    server->updateNicknameInClients(client->getFd(), nickname);
-    server->updateNicknameInChannels(oldNickname, nickname);
+	server->updateNicknameInClients(client->getFd(), nickname);
+	server->updateNicknameInChannels(oldNickname, nickname);
 
-    client->setNickname(nickname);
-
-	std::vector<Channel*> channels = server->getChannels();
-	
-	for (std::vector<Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
-		(*it)->sendWithLineEnding(IRCResponse::RPL_NICKCHANGE(oldNickname, nickname));
-	}
-
-    client->sendWelcomeMessage();
+	client->setNickname(nickname);
+	client->sendWelcomeMessage();
 	// server->updateNicknameInClients(client->getFd(), nickname);
 	// server->updateNicknameInChannels(client->getNickname(), nickname);
 	// client->setNickname(nickname);
@@ -143,12 +136,12 @@ void User::execute(Client *client, std::vector<std::string> args) {
 		    IRCResponse::ERR_ALREADYREGISTERED(client->getNickname()));
 		return;
 	}
-	if(client->status != client_state::LOGIN) {
+	if (client->status != client_state::LOGIN) {
 		std::cout << "2222\n";
 		client->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(client->getNickname()));
-		return ;
-	}	
+		return;
+	}
 	if (args.size() < 4) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "USER"));
@@ -157,8 +150,7 @@ void User::execute(Client *client, std::vector<std::string> args) {
 	std::cout << "username is " << args[0] << std::endl;
 	std::cout << "realname is " << args[3] << std::endl;
 	client->setUsername(args[0]);
-	client->setRealname(
-	    args[3]);
+	client->setRealname(args[3]);
 	client->sendWelcomeMessage();
 }
 
@@ -423,7 +415,8 @@ PrivMsg::PrivMsg(Server *server, bool auth) : Base2(server, auth) {}
 PrivMsg::~PrivMsg() {}
 
 void PrivMsg::execute(Client *client, std::vector<std::string> args) {
-	std::cout << "in priv message and nockname of client is >>>" <<  client->getNickname() << std::endl;
+	std::cout << "in priv message and nockname of client is >>>"
+		  << client->getNickname() << std::endl;
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "PRIVMSG"));
@@ -466,18 +459,20 @@ void PrivMsg::execute(Client *client, std::vector<std::string> args) {
 				return;
 			}
 			channel->sending(client, message, "PRIVMSG");
-			// if (message == "BOT" || (message.find(' ') != std::string::npos
-            //     && message.substr(0, message.find(' ')) == "BOT"))
-            // {
-            //     _bot->Fetch(message);
-            //     channel->sendingForBot(C, message, "PRIVMSG");
-            //     DEBUGGER();
-            // }
-            // else
-            // {
-            //     channel->sending(C, message, "PRIVMSG");
-            //     DEBUGGER();
-            // }
+			// if (message == "BOT" || (message.find(' ') !=
+			// std::string::npos
+			//     && message.substr(0, message.find(' ')) ==
+			//     "BOT"))
+			// {
+			//     _bot->Fetch(message);
+			//     channel->sendingForBot(C, message, "PRIVMSG");
+			//     DEBUGGER();
+			// }
+			// else
+			// {
+			//     channel->sending(C, message, "PRIVMSG");
+			//     DEBUGGER();
+			// }
 		} else {
 			Client *cli = server->getClient(targets[i]);
 			if (!cli) {
@@ -685,13 +680,15 @@ void Who::execute(Client *client, std::vector<std::string> args) {
 
 	Client *cli = server->getClient(args[0]);
 	if (!cli) {
-		client->respondWithPrefix(IRCResponse::ERR_NOSUCHNICK(client->getNickname(), args[0]));
+		client->respondWithPrefix(IRCResponse::ERR_NOSUCHNICK(
+		    client->getNickname(), args[0]));
 		return;
 	}
 
-	client->sendWithLineEnding(
-	    IRCResponse::RPL_WHOREPLY(client->getNickname(), "*", client->getUsername(),
-				      client->getHostname(), client->getNickname(), "H", client->getRealname()));
+	client->sendWithLineEnding(IRCResponse::RPL_WHOREPLY(
+	    client->getNickname(), "*", client->getUsername(),
+	    client->getHostname(), client->getNickname(), "H",
+	    client->getRealname()));
 	client->sendWithLineEnding(
 	    IRCResponse::RPL_ENDOFWHO(client->getNickname(), args[0]));
 }

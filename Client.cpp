@@ -81,28 +81,28 @@ void Client::handleChannelJoin(Channel *channel) {
 
 	std::string users;
 	std::vector<std::string> nicknames = chan->getNicknames();
-	std::cout << "1111111\n";
 	for (std::vector<std::string>::iterator it = nicknames.begin();
 	     it != nicknames.end(); ++it) {
 		users += *it + " ";
 	}
-	std::cout << "2222222\n";
 	std::string joinedUsers = users.empty() ? "" : " " + users;
 	std::string channelName = channel->getName();
-	std::cout << "33333\n";
-	for (size_t i = 0; i < channel->getClients().size(); ++i) {
-		channel->getClients()[i]->sendWithLineEnding(
-		    IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
-		channel->getClients()[i]->respondWithPrefix(
-		    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users));
-		channel->getClients()[i]->respondWithPrefix(
-		    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName));
-	}
-	std::cout << "33333\n";
-
-	std::cout << "44444444\n";
-
-	std::cout << "55555555\n";
+	// for (size_t i = 0; i < channel->getClients().size(); ++i) {
+	// 	channel->getClients()[i]->sendWithLineEnding(
+	// 	    IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
+	// 	channel->getClients()[i]->respondWithPrefix(
+	// 	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users));
+	// 	channel->getClients()[i]->respondWithPrefix(
+	// 	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName));
+	// }
+	this->sendWithLineEnding(
+			 IRCResponse::RPL_JOIN(this->getPrefix(), channelName.c_str()));
+	channel->sending(this, IRCResponse::RPL_MSG(
+	    this->getPrefix(), "PRIVMSG", channelName,
+	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users)),  "PRIVMSG");
+	channel->sending(this, IRCResponse::RPL_MSG(
+	    this->getPrefix(), "PRIVMSG", channelName,
+	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName)),  "PRIVMSG");
 
 	std::string message =
 	    nick_name + " has joined the channel " + channelName + joinedUsers;
