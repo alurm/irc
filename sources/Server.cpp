@@ -1,23 +1,24 @@
 #include "Server.hpp"
 
 Server::Server(const std::string &port, const std::string &pass)
-    : port(port), host("127.0.0.1"), pass(pass) {
+    : running(1), port(port), host("127.0.0.1"), pass(pass) {
 	sock = initializeSocket();
-	running = 1;
 }
 
 int Server::initializeSocket() {
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0) {
-		throw std::runtime_error("Eror: Unabl to open the socket!");
+		throw std::runtime_error("Error: Unable to open the socket!");
 	}
 
-	int optval = 1;
-	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
-		       sizeof(optval)) == -1) {
-		close(sock_fd);
-		throw std::runtime_error(
-		    "Error: Unable to set socket options.");
+	{
+		int optval = 1;
+		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
+			       sizeof(optval)) == -1) {
+			close(sock_fd);
+			throw std::runtime_error(
+			    "Error: Unable to set socket options.");
+		}
 	}
 
 	struct sockaddr_in serv_addr = {};
@@ -25,7 +26,7 @@ int Server::initializeSocket() {
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(atoi(port.c_str()));
 
-	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),	
+	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),
 		 sizeof(serv_addr)) < 0) {
 		throw std::runtime_error("Error: Failed to bind the socket.");
 	}
@@ -153,8 +154,7 @@ struct message Server::get_client_message(int fd) {
 	    .word = "",
 	    .in_trailing = false,
 	};
-	std::vector<lexeme> lexemes =
-	    lex_string(message.c_str(), &lexerState);
+	std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
 	if (lexemes.empty()) {
 		std::cout << "lexemes are empty\n";
 	}
@@ -392,6 +392,4 @@ void Server::updateNicknameInChannels(const std::string &oldNickname,
 	}
 }
 
-std::vector<Channel *> Server::getChannels () {
-	return channels;
-}
+std::vector<Channel *> Server::getChannels() { return channels; }
