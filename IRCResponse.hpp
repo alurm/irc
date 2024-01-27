@@ -84,9 +84,9 @@ class IRCResponse {
 					const std::string &users) {
 		return "353 " + str + " = " + channel + " :" + users;
 	}
-	static std::string RPL_ENDOFNAMES(const std::string &str,
-					  const std::string &channel) {
-		return "366 " + str + " " + channel + " :End of /NAMES list.";
+	static std::string RPL_ENDOFNAMES(const std::string &name,
+					  const std::string &ch) {
+		return "366 " + name +  " " + ch + " :End of /NAMES list";
 	}
 	/* Command Responses */
 	static std::string RPL_JOIN(const std::string &str,
@@ -204,6 +204,9 @@ class IRCResponse {
 					const std::string &source) {
 		return "315 " + name + " " + source + " :End of WHO list";
 	}
+	static std::string RPL_NICKCHANGE(const std::string& oldNickname, const std::string& newNickname) {
+        return oldNickname + " is now known as " + newNickname;
+    }
 	// static std::string
 	// RPL_WHOREPLY(const std::string &name, const std::string &ch,
 	// 	     const std::string &us, const std::string &hst,

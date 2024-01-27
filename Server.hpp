@@ -48,6 +48,10 @@ class Server {
 	Channel *getChannel(const std::string &name);
 	Channel *addChannel(const std::string &name, const std::string &key,
 			    Client *client);
+	void closeFreeALL(void);
+	void updateNicknameInClients(int fd, const std::string& newNickname);
+	void updateNicknameInChannels(const std::string& oldNickname, const std::string& newNickname);
+	std::vector<Channel *>  getChannels();
 };
 
 #endif

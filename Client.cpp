@@ -1,26 +1,22 @@
 #include "Client.hpp"
 
 Client::Client(int fd, int port, const std::string &hostname)
-    : fd(fd), port(port), host_name(hostname), chan(NULL), status(client_state::HANDSHAKE){}
+    : fd(fd), port(port), host_name(hostname), chan(NULL),
+      status(client_state::HANDSHAKE) {}
 
 Client::~Client() {}
 
-bool Client::nickIsCorrect(std::string buffer)
-{
-    std::string notAllowed = " ,*?!@$:#.";
-    std::size_t pos = buffer.find_first_of(notAllowed);
-    if (pos != std::string::npos)
-    {
-        return false;
-    }
-    return true;
+bool Client::nickIsCorrect(std::string buffer) {
+	std::string notAllowed = " ,*?!@$:#.";
+	std::size_t pos = buffer.find_first_of(notAllowed);
+	if (pos != std::string::npos) {
+		return false;
+	}
+	return true;
 }
 
 int Client::getPort() const { return port; }
-int Client::getFd() const { 
-
-    return fd; 
-}
+int Client::getFd() const { return fd; }
 std::string Client::getNickname() const { return nick_name; }
 std::string Client::getUsername() const { return user_name; }
 std::string Client::getRealname() const { return real_name; }
@@ -32,23 +28,28 @@ std::string Client::getPrefix() const {
 }
 Channel *Client::getChannel() const { return chan; }
 
-void Client::setNickname(const std::string &nickname) { nick_name = nickname; }
+void Client::setNickname(const std::string &nickname) {
+	this->nick_name = nickname;
+	std::cout << this->nick_name << " <<<<<<<<<<<<<<<<   nick_name    \n";
+}
 void Client::setUsername(const std::string &username) { user_name = username; }
 void Client::setRealname(const std::string &realname) { real_name = realname; }
 void Client::setState(client_state::ClientState state) { status = state; }
 void Client::setChannel(Channel *channel) { chan = channel; }
-bool Client::isInRegisteredState() const { return status == client_state::REGISTERED; }
-
+bool Client::isInRegisteredState() const {
+	return status == client_state::REGISTERED;
+}
 
 void Client::sendWithLineEnding(const std::string &message) const {
-    std::string buffer = message + "\r\n";
-    const char *data = buffer.c_str();
-    int length = buffer.length();
+	std::string buffer = message + "\r\n";
+	const char *data = buffer.c_str();
+	int length = buffer.length();
 
-    int sentBytes = send(fd, data, length, 0);
-    if (sentBytes < 0 || sentBytes != length) {
-        throw std::runtime_error("Error while sending a message to a client!");
-    }
+	int sentBytes = send(fd, data, length, 0);
+	if (sentBytes < 0 || sentBytes != length) {
+		throw std::runtime_error(
+		    "Error while sending a message to a client!");
+	}
 }
 
 void Client::respondWithPrefix(const std::string &message) {
@@ -56,44 +57,57 @@ void Client::respondWithPrefix(const std::string &message) {
 }
 
 void Client::sendWelcomeMessage() {
-    if (status != client_state::LOGIN || user_name.empty() || real_name.empty() || nick_name.empty()) {
-        return;
-    }
+	if (status != client_state::LOGIN || user_name.empty() ||
+	    real_name.empty() || nick_name.empty()) {
+		return;
+	}
 
-    status = client_state::REGISTERED;
-    this->respondWithPrefix(IRCResponse::RPL_WELCOME(nick_name));
+	status = client_state::REGISTERED;
+	this->respondWithPrefix(IRCResponse::RPL_WELCOME(nick_name));
 
-    std::ostringstream welcomeMessage;
-    welcomeMessage << host_name << ":" << port << " is now known as " << nick_name << ".";
-    std::cout << welcomeMessage.str() << std::endl;
+	std::ostringstream welcomeMessage;
+	welcomeMessage << host_name << ":" << port << " is now known as "
+		       << nick_name << ".";
+	std::cout << welcomeMessage.str() << std::endl;
 }
-
 
 void Client::handleChannelJoin(Channel *channel) {
-    if (!channel) {
-        return;
-    }
+	if (!channel || channel->isInChannel(this)) {
+		return;
+	}
 
-    channel->add_client(this);
-    chan = channel;
+	channel->add_client(this);
+	chan = channel;
 
-    std::string users;
-    std::vector<std::string> nicknames = chan->getNicknames();
-    for (std::vector<std::string>::iterator it = nicknames.begin(); it != nicknames.end(); ++it) {
-        users += *it + " ";
-    }
+	std::string users;
+	std::vector<std::string> nicknames = chan->getNicknames();
+	std::cout << "1111111\n";
+	for (std::vector<std::string>::iterator it = nicknames.begin();
+	     it != nicknames.end(); ++it) {
+		users += *it + " ";
+	}
+	std::cout << "2222222\n";
+	std::string joinedUsers = users.empty() ? "" : " " + users;
+	std::string channelName = channel->getName();
+	std::cout << "33333\n";
+	for (size_t i = 0; i < channel->getClients().size(); ++i) {
+		channel->getClients()[i]->sendWithLineEnding(
+		    IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
+		channel->getClients()[i]->respondWithPrefix(
+		    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users));
+		channel->getClients()[i]->respondWithPrefix(
+		    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName));
+	}
+	std::cout << "33333\n";
 
-    std::string joinedUsers = users.empty() ? "" : " " + users;
-    std::string channelName = channel->getName();
+	std::cout << "44444444\n";
 
-    respondWithPrefix(IRCResponse::RPL_NAMREPLY(nick_name, channelName, users));
-    respondWithPrefix(IRCResponse::RPL_ENDOFNAMES(nick_name, channelName));
-    channel->sendAll(IRCResponse::RPL_JOIN(getPrefix(), channelName));
+	std::cout << "55555555\n";
 
-    std::string message = nick_name + " has joined the channel " + channelName + joinedUsers;
-    std::cout << message << std::endl;
+	std::string message =
+	    nick_name + " has joined the channel " + channelName + joinedUsers;
+	std::cout << message << std::endl;
 }
-
 
 void Client::handleChannelLeave() {
 	if (!chan)
@@ -108,12 +122,11 @@ void Client::handleChannelLeave() {
 	std::cout << message << std::endl;
 }
 
-Client *Channel::getClientByNick(std::string nickname)
-{
-    std::vector<Client*>::iterator it = clients.begin();
-    for( ; it != clients.end(); ++it)
-        if ((*it)->getNickname() == nickname)
-            return (*it);
+Client *Channel::getClientByNick(std::string nickname) {
+	std::vector<Client *>::iterator it = clients.begin();
+	for (; it != clients.end(); ++it)
+		if ((*it)->getNickname() == nickname)
+			return (*it);
 
-    return NULL;
+	return NULL;
 }

@@ -53,14 +53,15 @@ class Channel {
 	void setChannelLimit(int l);
 	std::string getTopic(void);
 	void setTopic(const std::string &t);
-	void sending(Client *client, const std::string &msg,
-		     const std::string &cmd);
 	void kick(Client *client, Client *target, const std::string &reason);
 	void removeClient(Client *client);
 	void broadcast(const std::string &message, Client *exclude);
 	void broadcast(const std::string &message);
 	bool channelIsFull(void);
 	void replyWho(Client* client, int mode);
+	std::vector<Client *> getClients() const;
+	std::vector<Client *> getOperators() const;
+	void sending(Client* C, const std::string& msg, const std::string& cmd);
 };
 
 #endif

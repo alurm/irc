@@ -2,26 +2,21 @@
 
 Server::Server(const std::string &port, const std::string &pass)
     : port(port), host("127.0.0.1"), pass(pass) {
-	running = 1;
 	sock = initializeSocket();
 }
 
 int Server::initializeSocket() {
 	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock_fd < 0) {
-		throw std::runtime_error("Eror: Unabl to open the socket 🤮");
+		throw std::runtime_error("Eror: Unabl to open the socket!");
 	}
 
 	int optval = 1;
 	if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
-		       sizeof(optval))) {
+		       sizeof(optval)) == -1) {
+		close(sock_fd);
 		throw std::runtime_error(
 		    "Error: Unable to set socket options.");
-	}
-
-	if (fcntl(sock_fd, F_SETFL, O_NONBLOCK)) {
-		throw std::runtime_error(
-		    "Error: Unable to set socket as non-blocking.");
 	}
 
 	struct sockaddr_in serv_addr = {};
@@ -39,6 +34,12 @@ int Server::initializeSocket() {
 		    "Error: Failed to start listening on the socket.");
 	}
 
+	if (fcntl(sock_fd, F_SETFL, O_NONBLOCK)) {
+		throw std::runtime_error(
+		    "Error: Unable to set socket as non-blocking.");
+	}
+	this->clients.insert(std::pair<int, Client *>(sock, NULL));
+
 	return sock_fd;
 }
 
@@ -53,12 +54,17 @@ void Server::connect_client() {
 
 	int fd = accept(sock, reinterpret_cast<sockaddr *>(&addr), &size);
 	if (fd < 0) {
+		close(sock);
 		throw std::runtime_error("Error while accepting a new client!");
 	}
 
 	pollfd pfd = {fd, POLLIN, 0};
 	fds.push_back(pfd);
-
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+		close(sock);
+		throw std::runtime_error(
+		    "Error: setting client fd to non-blocking mode failed!");
+	}
 	char hostname[NI_MAXHOST];
 	if (getnameinfo(reinterpret_cast<sockaddr *>(&addr), sizeof(addr),
 			hostname, NI_MAXHOST, NULL, 0, NI_NUMERICSERV) != 0) {
@@ -113,13 +119,14 @@ struct message Server::get_client_message(int fd) {
 	char buffer[1024];
 	int bytesRead;
 
-	// bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-	while ((bytesRead = recv(fd, buffer, sizeof(buffer), 0)) > 0) {
-		message.append(buffer, bytesRead);
-		if (message.find("\r\n") != std::string::npos) {
-			break;
-		}
-	}
+	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+	// while ((bytesRead = recv(fd, buffer, sizeof(buffer), 0)) > 0) {
+	// 	message.append(buffer, bytesRead);
+	// 	if (message.find("\r\n") != std::string::npos) {
+	// 		std::cout << "🇨🇿\n";
+	// 		break;
+	// 	}
+	// }
 
 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
 		std::cout << "Error occurred during recv: " << strerror(errno)
@@ -127,17 +134,17 @@ struct message Server::get_client_message(int fd) {
 		throw std::runtime_error(
 		    "Error while reading buffer from a client!");
 	}
-	// message.append(buffer);
+	message.append(buffer);
 
 	std::cout << "message is " << message << std::endl;
 	std::stringstream ss(message);
 	std::string syntax;
 
 	std::cout << "bull" << (message.back() == '\n') << std::endl;
-	size_t lastNewlinePos = message.find_last_of('\n');
-	if (lastNewlinePos != std::string::npos) {
-		message.replace(lastNewlinePos, 1, "\r\n");
-	}
+	// size_t lastNewlinePos = message.find_last_of('\n');
+	// if (lastNewlinePos != std::string::npos) {
+	// 	message.replace(lastNewlinePos, 1, "\r\n");
+	// }
 	std::cout << "Modified message is " << message << std::endl;
 	std::string trimmedMessage = trim(message);
 	lex_state lexerState = {
@@ -198,13 +205,14 @@ void Server::handle_client_message(int fd) {
 }
 
 void Server::start() {
+
 	pollfd srv = {sock, POLLIN, 0};
 	fds.push_back(srv);
 
 	std::cout << "Server is running...\n";
 	std::vector<pollfd>::iterator it;
 
-	while (running) {
+	while (1) {
 		if (poll(&fds[0], fds.size(), -1) < 0) {
 			throw std::runtime_error(
 			    "Error while polling from fd!");
@@ -229,6 +237,7 @@ void Server::start() {
 			handle_client_message(it->fd);
 		}
 	}
+	closeFreeALL();
 }
 
 std::string Server::getPassword() const { return pass; }
@@ -319,10 +328,10 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "WHO") == 0) {
 		command = new Who(this, true);
 		std::cout << "in who\n";
-	} else if(strcmp(m.command, "")){
+	} else if (strcmp(m.command, "")) {
 		std::cout << "empty\n";
-		return ;
-	}else {
+		return;
+	} else {
 		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
 		    c->getNickname(), m.command));
 		return;
@@ -341,4 +350,47 @@ void Server::dispatch(Client *c, message m) {
 		command->execute(c, args);
 		delete command;
 	}
+}
+
+void Server::closeFreeALL(void) {
+	std::map<int, Client *>::iterator it = clients.begin();
+	for (; it != clients.end(); ++it) {
+		close(it->first);
+		if (it->second)
+			delete it->second;
+	}
+	clients.clear();
+}
+
+void Server::updateNicknameInClients(int fd, const std::string &newNickname) {
+	std::map<int, Client *>::iterator clientIt = clients.find(fd);
+
+	if (clientIt != clients.end()) {
+		clientIt->second->setNickname(newNickname);
+	}
+}
+
+void Server::updateNicknameInChannels(const std::string &oldNickname,
+				      const std::string &newNickname) {
+	for (size_t i = 0; i < channels.size(); ++i) {
+		std::vector<Client *> channelClients =
+		    channels[i]->getClients();
+		std::vector<Client *> channelOps = channels[i]->getOperators();
+
+		for (size_t j = 0; j < channelClients.size(); ++j) {
+			if (channelClients[j]->getNickname() == oldNickname) {
+				channelClients[j]->setNickname(newNickname);
+			}
+		}
+
+		for (size_t j = 0; j < channelOps.size(); ++j) {
+			if (channelOps[j]->getNickname() == oldNickname) {
+				channelOps[j]->setNickname(newNickname);
+			}
+		}
+	}
+}
+
+std::vector<Channel *> Server::getChannels () {
+	return channels;
 }

@@ -17,7 +17,7 @@ std::vector<std::string> Channel::getNicknames() {
 		    (client == admin ? "@" : "") + client->getNickname();
 		nicknames.push_back(nick);
 	}
-
+	
 	return nicknames;
 }
 
@@ -107,13 +107,13 @@ void Channel::setChannelLimit(int l) { limit = l; }
 std::string Channel::getTopic(void) { return topic; }
 void Channel::setTopic(const std::string &t) { topic = t; }
 
-void Channel::sending(Client *client, const std::string &msg,
-		      const std::string &cmd) {
-	for (size_t i = 0; i < clients.size(); ++i)
-		if (clients[i] != client)
-			clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(
-			    client->getPrefix(), cmd, name, msg));
-}
+// void Channel::sending(Client *client, const std::string &msg,
+// 		      const std::string &cmd) {
+// 	for (size_t i = 0; i < clients.size(); ++i)
+// 		if (clients[i] != client)
+// 			clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(
+// 			    client->getPrefix(), cmd, name, msg));
+// }
 
 void Channel::kick(Client *client, Client *target, const std::string &reason) {
 	this->broadcast(
@@ -197,3 +197,18 @@ void Channel::replyWho(Client *client, int mode)
     client->sendWithLineEnding(IRCResponse::RPL_ENDOFWHO(client->getNickname(), name));
 }
 void Channel::add_client(Client *client) { clients.push_back(client); }
+
+
+std::vector<Client *> Channel::getClients() const{
+	return clients;
+}
+std::vector<Client *> Channel::getOperators() const{
+	return operators;
+}
+
+void Channel::sending(Client* C, const std::string& msg, const std::string& cmd)
+{
+    for (size_t i = 0; i < clients.size(); ++i)
+        if (clients[i] != C)
+            clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(C->getPrefix(), cmd, name, msg));
+}
