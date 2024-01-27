@@ -1,7 +1,6 @@
 .DEFAULT_GOAL := test
 
-# cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
-cpp_flags := -std=c++98 -g -fsanitize=undefined
+cpp_flags := -std=c++98 -W{all,extra,error} -g -fsanitize=undefined
 
 .PHONY : test
 test : objects/test ; ./objects/test
@@ -23,9 +22,6 @@ generated_makefiles/%.mk : sources/%.cpp Makefile
 		-MP `# Make a phony target for all headers` \
 		$< > $@ \
 	;
-
-all_source_names :
-	echo $(all_sources)
 
 all_sources := $(shell cd sources; printf '%s\n' *.cpp | sed 's/\.cpp$$//g' | tr '\n' ' '; echo)
 all_generated_makefiles := $(addprefix generated_makefiles/, $(addsuffix .mk, $(all_sources)))

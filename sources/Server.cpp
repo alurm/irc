@@ -136,14 +136,6 @@ struct message Server::get_client_message(int fd) {
 	}
 	message.append(buffer);
 
- 	size_t found = message.find("[");
-	size_t found1 = message.find("[");
-	size_t found2 = message.find("{");
-    if (found != std::string::npos) {
-        std::cout << "String contains []" << std::endl;
-    } else {
-        std::cout << "String does not contain []" << std::endl;
-    }
 	std::cout << "message is " << message << std::endl;
 	std::stringstream ss(message);
 	std::string syntax;
@@ -220,7 +212,7 @@ void Server::start() {
 	std::cout << "Server is running...\n";
 	std::vector<pollfd>::iterator it;
 
-	while (1) {
+	while (running) {
 		if (poll(&fds[0], fds.size(), -1) < 0) {
 			throw std::runtime_error(
 			    "Error while polling from fd!");
