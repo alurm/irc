@@ -17,18 +17,16 @@
 // #include "Base2.hpp"
 #include "Command.hpp"
 #include "Utils.hpp"
-#define MAX_CLIENTS 100
 
 class Client;
 class Channel;
 
 class Server {
       private:
-	int running;
 	int sock;
 	const std::string port;
-	const std::string host;
 	const std::string pass;
+	// File descriptors events on which we want to be notified about.
 	std::vector<pollfd> fds;
 	std::map<int, Client *> clients;
 	std::vector<Channel *> channels;

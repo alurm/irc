@@ -1,7 +1,7 @@
 #include "Server.hpp"
 
 Server::Server(const std::string &port, const std::string &pass)
-    : running(1), port(port), host("127.0.0.1"), pass(pass) {
+    : port(port), pass(pass) {
 	sock = initializeSocket();
 }
 
@@ -25,23 +25,25 @@ int Server::initializeSocket() {
 	struct sockaddr_in serv_addr = {};
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
+	// Host to two network ordered octets.
 	serv_addr.sin_port = htons(atoi(port.c_str()));
 
+	// Static and dynamic casts would not work here because there is no inheritance involved.
 	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),
 		 sizeof(serv_addr)) < 0) {
 		throw std::runtime_error("Error: Failed to bind the socket.");
 	}
 
-	if (listen(sock_fd, MAX_CLIENTS) < 0) {
+	if (listen(sock_fd, SOMAXCONN) < 0) {
 		throw std::runtime_error(
 		    "Error: Failed to start listening on the socket.");
 	}
 
+	// File control, file set flags, non blocking.
 	if (fcntl(sock_fd, F_SETFL, O_NONBLOCK)) {
 		throw std::runtime_error(
 		    "Error: Unable to set socket as non-blocking.");
 	}
-	this->clients.insert(std::pair<int, Client *>(sock, NULL));
 
 	return sock_fd;
 }
@@ -52,16 +54,22 @@ Server::~Server() {
 }
 
 void Server::connect_client() {
-	sockaddr_in addr = {};
-	socklen_t size = sizeof(addr);
+	sockaddr_in addr;
 
-	int fd = accept(sock, reinterpret_cast<sockaddr *>(&addr), &size);
-	if (fd < 0) {
-		close(sock);
-		throw std::runtime_error("Error while accepting a new client!");
+	int fd;
+	{
+		socklen_t size = sizeof(addr);
+		// Size is an out parameter to know the actual size.
+		// But we know that sockaddr_in is used.
+		// Therefore, this information is useless.
+		fd = accept(sock, reinterpret_cast<sockaddr *>(&addr), &size);
+		if (fd < 0) {
+			close(sock);
+			throw std::runtime_error("Error while accepting a new client!");
+		}
 	}
 
-	pollfd pfd = {fd, POLLIN, 0};
+	pollfd pfd = { .fd = fd, .events = POLLIN };
 	fds.push_back(pfd);
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
 		close(sock);
@@ -180,33 +188,34 @@ void Server::handle_client_message(int fd) {
 
 void Server::start() {
 
-	pollfd srv = {sock, POLLIN, 0};
+	// Be notified about incoming connections.
+	pollfd srv = { .fd = sock, .events = POLLIN };
+
 	fds.push_back(srv);
-	std::vector<pollfd>::iterator it;
-	while (running) {
-		if (poll(&fds[0], fds.size(), -1) < 0) {
+
+	while (true) {
+		// Timeout is -1 to wait for event indefinitely.
+		if (poll(fds.data(), fds.size(), -1) < 0) {
 			throw std::runtime_error(
-			    "Error while polling from fd!");
+			    "Error while polling from fds!");
 		}
 
-		for (it = fds.begin(); it != fds.end(); ++it) {
-			if (it->revents == 0) {
-				continue;
-			}
-
-			if ((it->revents & POLLHUP) == POLLHUP) {
+		for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end(); ++it) {
+			if (it->revents & POLLHUP) {
 				disconnectClient(it->fd);
 				break;
 			}
 
-			if ((it->revents & POLLIN) == POLLIN) {
+			if (it->revents & POLLIN) {
 				if (it->fd == sock) {
 					connect_client();
 					break;
 				}
 			}
+			
 			handle_client_message(it->fd);
 		}
+		// system("leaks ircserv");
 	}
 	closeFreeALL();
 }
