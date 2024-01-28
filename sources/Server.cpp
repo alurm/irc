@@ -13,11 +13,12 @@ int Server::initializeSocket() {
 
 	{
 		int optval = 1;
+		// What does SO_REUSEADDR do? Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml
 		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
 			       sizeof(optval)) == -1) {
 			close(sock_fd);
 			throw std::runtime_error(
-			    "Error: Unable to set socket options.");
+			    "Error: Unable to set SO_REUSEADDR on socket.");
 		}
 	}
 
@@ -85,30 +86,25 @@ void Server::connect_client() {
 }
 
 void Server::disconnectClient(int fd) {
-	try {
-		Client *client = clients.at(fd);
-		client->handleChannelLeave();
-		char message[1000];
-		sprintf(message, "%s:%d has disconnected!",
-			client->getHostname().c_str(), client->getPort());
-		std::cout << message << std::endl;
-		clients.erase(fd);
-		std::vector<pollfd>::iterator it_b = fds.begin();
-		std::vector<pollfd>::iterator it_e = fds.end();
-		while (it_b != it_e) {
-			if (it_b->fd == fd) {
-				it_b = fds.erase(it_b);
-				close(fd);
-				break;
-			} else {
-				++it_b;
-			}
+	Client *client = clients.at(fd);
+	client->handleChannelLeave();
+	char message[1000];
+	sprintf(message, "%s:%d has disconnected!",
+		client->getHostname().c_str(), client->getPort());
+	std::cout << message << std::endl;
+	clients.erase(fd);
+	std::vector<pollfd>::iterator it_b = fds.begin();
+	std::vector<pollfd>::iterator it_e = fds.end();
+	while (it_b != it_e) {
+		if (it_b->fd == fd) {
+			it_b = fds.erase(it_b);
+			close(fd);
+			break;
+		} else {
+			++it_b;
 		}
-		delete client;
-	} catch (const std::exception &e) {
-		std::cout << "Error while disconnecting! " << e.what()
-			  << std::endl;
 	}
+	delete client;
 }
 
 struct message Server::get_client_message(int fd) {
@@ -122,13 +118,6 @@ struct message Server::get_client_message(int fd) {
 	int bytesRead;
 
 	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-	// while ((bytesRead = recv(fd, buffer, sizeof(buffer), 0)) > 0) {
-	// 	message.append(buffer, bytesRead);
-	// 	if (message.find("\r\n") != std::string::npos) {
-	// 		std::cout << "🇨🇿\n";
-	// 		break;
-	// 	}
-	// }
 
 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
 		std::cout << "Error occurred during recv: " << strerror(errno)
@@ -137,18 +126,15 @@ struct message Server::get_client_message(int fd) {
 		    "Error while reading buffer from a client!");
 	}
 	message.append(buffer);
+	// size_t pos = message.find("\r\n");
 
-	std::cout << "message is " << message << std::endl;
+	// if (pos != std::string::npos) {
+	// 	message.replace(message.rfind("\r\n"), 2, "\r\n\r\n");
+	// }
+
 	std::stringstream ss(message);
 	std::string syntax;
 
-	// std::cout << "bull" << (message.back() == '\n') << std::endl;
-	// size_t lastNewlinePos = message.find_last_of('\n');
-	// if (lastNewlinePos != std::string::npos) {
-	// 	message.replace(lastNewlinePos, 1, "\r\n");
-	// }
-	std::cout << "Modified message is " << message << std::endl;
-	// unescapeSpecialCharacters(message);
 	std::string trimmedMessage = trim(message);
 	lex_state lexerState = {
 	    .state = lex_state::in_word,
@@ -156,9 +142,6 @@ struct message Server::get_client_message(int fd) {
 	    .in_trailing = false,
 	};
 	std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
-	if (lexemes.empty()) {
-		std::cout << "lexemes are empty\n";
-	}
 	parse_state parserState = {
 	    .prefix =
 		{
@@ -175,34 +158,23 @@ struct message Server::get_client_message(int fd) {
 					  << std::endl;
 			}
 		}
-	} else {
-		std::cout << "parsedMessages is empty!" << std::endl;
 	}
 	return m;
 }
 
 void Server::handle_client_message(int fd) {
-	try {
-		if (clients.count(fd) > 0) {
-			Client *client = clients.at(fd);
-			(void)client;
-			message message = this->get_client_message(fd);
-			std::vector<std::string> paramsVector;
-			for (int i = 0; i < message.params_count; i++) {
-				std::string param =
-				    std::string(message.params[i]);
-
-				std::cout << "Param in index " << i << "is --->"
-					  << param << std::endl;
-				paramsVector.push_back(param);
-			}
-			if (message.command) {
-				dispatch(client, message);
-			}
+	if (clients.count(fd) > 0) {
+		;
+		Client *client = clients.at(fd);
+		message message = this->get_client_message(fd);
+		std::vector<std::string> paramsVector;
+		for (int i = 0; i < message.params_count; i++) {
+			std::string param = std::string(message.params[i]);
+			paramsVector.push_back(param);
 		}
-	} catch (const std::exception &e) {
-		std::cout << "Error while handling the client message! "
-			  << e.what() << std::endl;
+		if (message.command) {
+			dispatch(client, message);
+		}
 	}
 }
 
@@ -210,10 +182,7 @@ void Server::start() {
 
 	pollfd srv = {sock, POLLIN, 0};
 	fds.push_back(srv);
-
-	std::cout << "Server is running...\n";
 	std::vector<pollfd>::iterator it;
-
 	while (running) {
 		if (poll(&fds[0], fds.size(), -1) < 0) {
 			throw std::runtime_error(
@@ -274,7 +243,6 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 
 void Server::dispatch(Client *c, message m) {
 
-	std::cout << " In dispatch\n";
 	std::vector<std::string> args;
 
 	Base2 *command = NULL;
@@ -288,49 +256,35 @@ void Server::dispatch(Client *c, message m) {
 	m.params = NULL;
 
 	if (strcmp(m.command, "PASS") == 0) {
-		command = new Pass(this, false);
 		std::cout << "in pass\n";
+		command = new Pass(this, false);
 	} else if (strcmp(m.command, "JOIN") == 0) {
 		command = new Join(this, true);
-		std::cout << "in join\n";
 	} else if (strcmp(m.command, "NICK") == 0) {
 		command = new Nick(this, false);
-		std::cout << "in nick\n";
 	} else if (strcmp(m.command, "USER") == 0) {
 		command = new User(this, false);
-		std::cout << "in user\n";
 	} else if (strcmp(m.command, "QUIT") == 0) {
 		command = new Quit(this, false);
-		std::cout << "in quit\n";
 	} else if (strcmp(m.command, "MODE") == 0) {
 		command = new Mode(this, true);
-		std::cout << "in mode\n";
 	} else if (strcmp(m.command, "TOPIC") == 0) {
 		command = new Topic(this, true);
-		std::cout << "in topic\n";
 	} else if (strcmp(m.command, "PING") == 0) {
 		command = new Ping(this, true);
-		std::cout << "in ping\n";
 	} else if (strcmp(m.command, "PRIVMSG") == 0) {
 		command = new PrivMsg(this, true);
-		std::cout << "in priv_msg\n";
 	} else if (strcmp(m.command, "PONG") == 0) {
 		command = new Pong(this, true);
-		std::cout << "in pong\n";
 	} else if (strcmp(m.command, "KICK") == 0) {
 		command = new Kick(this, true);
-		std::cout << "in kick\n";
 	} else if (strcmp(m.command, "INVITE") == 0) {
 		command = new Invite(this, true);
-		std::cout << "in invite\n";
 	} else if (strcmp(m.command, "PART") == 0) {
 		command = new Part(this, true);
-		std::cout << "in invite\n";
 	} else if (strcmp(m.command, "WHO") == 0) {
 		command = new Who(this, true);
-		std::cout << "in who\n";
 	} else if (strcmp(m.command, "")) {
-		std::cout << "empty\n";
 		return;
 	} else {
 		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
@@ -391,26 +345,3 @@ void Server::updateNicknameInChannels(const std::string &oldNickname,
 }
 
 std::vector<Channel *> Server::getChannels() { return channels; }
-
-void Server::unescapeSpecialCharacters(std::string& message) {
-    size_t pos = 0;
-    while ((pos = message.find("\\:", pos)) != std::string::npos) {
-        message.replace(pos, 2, ":");
-    }
-
-    pos = 0;
-    while ((pos = message.find("\\!", pos)) != std::string::npos) {
-        message.replace(pos, 2, "!");
-    }
-
-    size_t lastNewlinePos = message.find_last_of('\n');
-    if (lastNewlinePos != std::string::npos) {
-        message.replace(lastNewlinePos, 1, "\r\n");
-    }
-
-	pos = 0;
-    while ((pos = message.find("\\#", pos)) != std::string::npos) {
-        message.replace(pos, 2, "#");
-    }
-
-}

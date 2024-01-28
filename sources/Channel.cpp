@@ -2,8 +2,10 @@
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
     : name(name), admin(admin), key(key), limit(10), message(false) {
+		topic = "";
 		inviteOnly = false;
 		topicMode = false;
+		admin->sendWithLineEnding(IRCResponse::RPL_MSG(admin->getPrefix(), "", name, "you are the new admin"));
 		operators.push_back(admin);
 	}
 
@@ -51,10 +53,11 @@ void Channel::handleClientRemoval(Client *client) {
 	if (client == admin) {
 		if (!clients.empty()) {
 			admin = *(clients.begin());
-
+			admin->sendWithLineEnding(IRCResponse::RPL_MSG(admin->getPrefix(), "", name, "you are the new admin"));
 			std::string message =
 			    client->getNickname() +
 			    " is now the admin of the channel " + name;
+			this->sending(admin, message, "PRIVMSG");
 			std::cout << message << std::endl;
 		} else {
 			admin = NULL;
@@ -108,14 +111,6 @@ void Channel::setChannelLimit(int l) { limit = l; }
 
 std::string Channel::getTopic(void) { return topic; }
 void Channel::setTopic(const std::string &t) { topic = t; }
-
-// void Channel::sending(Client *client, const std::string &msg,
-// 		      const std::string &cmd) {
-// 	for (size_t i = 0; i < clients.size(); ++i)
-// 		if (clients[i] != client)
-// 			clients[i]->sendWithLineEnding(IRCResponse::RPL_MSG(
-// 			    client->getPrefix(), cmd, name, msg));
-// }
 
 void Channel::kick(Client *client, Client *target, const std::string &reason) {
 	this->broadcast(

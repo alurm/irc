@@ -7,7 +7,6 @@
 #include <vector>
 
 lexeme lex(char c, lex_state *l) {
-	std::cout << "in lexeme and char is " << c << "<<<<<<" << std::endl;
 	if (c == 0)
 		return (lexeme){
 		    .tag = lexeme::error,
@@ -50,7 +49,6 @@ lexeme lex(char c, lex_state *l) {
 			char *word = strdup(l->word.c_str());
 			assert(word != 0);
 			l->word = "";
-			std::cout << "WORD " << word << std::endl;
 			return (lexeme){
 			    .tag = lexeme::word,
 			    .value.word = word,
@@ -103,7 +101,6 @@ lexeme lex(char c, lex_state *l) {
 		}
 		break;
 	}
-	std::cout << "stex\n";
 	assert(0);
 }
 

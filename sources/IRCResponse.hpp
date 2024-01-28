@@ -207,17 +207,4 @@ class IRCResponse {
 	static std::string RPL_NICKCHANGE(const std::string& oldNickname, const std::string& newNickname) {
         return oldNickname + " is now known as " + newNickname;
     }
-	// static std::string
-	// RPL_WHOREPLY(const std::string &name, const std::string &ch,
-	// 	     const std::string &us, const std::string &hst,
-	// 	     const std::string &nick, const std::string &fl,
-	// 	     const std::string &re) {
-	// 	return "352 " + name + " " + ch + " " + us + " " + hst +
-	// 	       " ft_irc " + nick + " " + fl + " :" + re;
-	// }
 };
-
-
-
-// ERR_USERONCHANNEL(src, com1, com2) ----> "443 " + src + " " + com1 + " " + com2 + " :is already on channel"
-//RPL_CHANNELMODEIS(channelName1, channelName2, mode_params) -------> "324 " + channelName1 + " " + channelName2 + " " + " " + mode_params

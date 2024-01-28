@@ -52,7 +52,6 @@ class Server {
 	void updateNicknameInClients(int fd, const std::string& newNickname);
 	void updateNicknameInChannels(const std::string& oldNickname, const std::string& newNickname);
 	std::vector<Channel *>  getChannels();
-	void unescapeSpecialCharacters(std::string& message);
 };
 
 #endif

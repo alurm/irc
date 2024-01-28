@@ -24,7 +24,6 @@ std::string Client::getHostname() const { return host_name; }
 std::string Client::getPrefix() const {
 	std::string username = user_name.empty() ? "" : "!" + user_name;
 	std::string hostname = host_name.empty() ? "" : "@" + host_name;
-	std::cout << "nick in prefix is " << nick_name << std::endl;
 	return nick_name + username + hostname;
 }
 Channel *Client::getChannel() const { return chan; }
@@ -32,7 +31,6 @@ Channel *Client::getChannel() const { return chan; }
 void Client::setNickname(const std::string &nickname) {
 	sendWithLineEnding(":" + nick_name + " NICK " + nickname);
 	this->nick_name = nickname;
-	std::cout << this->nick_name << " <<<<<<<<<<<<<<<<   nick_name    \n";
 }
 void Client::setUsername(const std::string &username) { user_name = username; }
 void Client::setRealname(const std::string &realname) { real_name = realname; }
@@ -89,22 +87,28 @@ void Client::handleChannelJoin(Channel *channel) {
 	}
 	std::string joinedUsers = users.empty() ? "" : " " + users;
 	std::string channelName = channel->getName();
-	// for (size_t i = 0; i < channel->getClients().size(); ++i) {
-	// 	channel->getClients()[i]->sendWithLineEnding(
-	// 	    IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
-	// 	channel->getClients()[i]->respondWithPrefix(
-	// 	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users));
-	// 	channel->getClients()[i]->respondWithPrefix(
-	// 	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName));
-	// }
-	this->sendWithLineEnding(
-			 IRCResponse::RPL_JOIN(this->getPrefix(), channelName.c_str()));
-	channel->sending(this, IRCResponse::RPL_MSG(
+
+    for(size_t i = 0; i < channel->getClients().size(); ++i)
+        channel->getClients()[i]->sendWithLineEnding(IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
+
+	std::string topic = channel->getTopic();
+	if (topic.empty())
+	{
+		this->sendWithLineEnding(IRCResponse::RPL_MSG(
+		    this->getPrefix(), "PRIVMSG", channelName,
+		    IRCResponse::RPL_NOTOPIC(channelName)));
+	}
+	else {
+		this->sendWithLineEnding(
+		    IRCResponse::RPL_TOPIC(channelName, topic));
+	}
+
+	this->sendWithLineEnding(IRCResponse::RPL_MSG(
 	    this->getPrefix(), "PRIVMSG", channelName,
-	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users)),  "PRIVMSG");
-	channel->sending(this, IRCResponse::RPL_MSG(
+	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users)));
+	this->sendWithLineEnding(IRCResponse::RPL_MSG(
 	    this->getPrefix(), "PRIVMSG", channelName,
-	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName)),  "PRIVMSG");
+	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName)));
 
 	std::string message =
 	    nick_name + " has joined the channel " + channelName + joinedUsers;
