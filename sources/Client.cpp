@@ -24,11 +24,13 @@ std::string Client::getHostname() const { return host_name; }
 std::string Client::getPrefix() const {
 	std::string username = user_name.empty() ? "" : "!" + user_name;
 	std::string hostname = host_name.empty() ? "" : "@" + host_name;
+	std::cout << "nick in prefix is " << nick_name << std::endl;
 	return nick_name + username + hostname;
 }
 Channel *Client::getChannel() const { return chan; }
 
 void Client::setNickname(const std::string &nickname) {
+	sendWithLineEnding(":" + nick_name + " NICK " + nickname);
 	this->nick_name = nickname;
 	std::cout << this->nick_name << " <<<<<<<<<<<<<<<<   nick_name    \n";
 }

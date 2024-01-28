@@ -7,6 +7,7 @@
 #include <vector>
 
 lexeme lex(char c, lex_state *l) {
+	std::cout << "in lexeme and char is " << c << "<<<<<<" << std::endl;
 	if (c == 0)
 		return (lexeme){
 		    .tag = lexeme::error,
@@ -129,7 +130,6 @@ void print_message(message m) {
 }
 
 parseme parse(lexeme l, parse_state *p) {
-	std::cout << "in parsing\n";
 	switch (l.tag) {
 	case lexeme::carriage_return_line_feed: {
 		if (p->words.size() == 0) {

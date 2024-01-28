@@ -142,12 +142,13 @@ struct message Server::get_client_message(int fd) {
 	std::stringstream ss(message);
 	std::string syntax;
 
-	std::cout << "bull" << (message.back() == '\n') << std::endl;
-	size_t lastNewlinePos = message.find_last_of('\n');
-	if (lastNewlinePos != std::string::npos) {
-		message.replace(lastNewlinePos, 1, "\r\n");
-	}
+	// std::cout << "bull" << (message.back() == '\n') << std::endl;
+	// size_t lastNewlinePos = message.find_last_of('\n');
+	// if (lastNewlinePos != std::string::npos) {
+	// 	message.replace(lastNewlinePos, 1, "\r\n");
+	// }
 	std::cout << "Modified message is " << message << std::endl;
+	// unescapeSpecialCharacters(message);
 	std::string trimmedMessage = trim(message);
 	lex_state lexerState = {
 	    .state = lex_state::in_word,
@@ -273,7 +274,6 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 
 void Server::dispatch(Client *c, message m) {
 
-	std::cout << "Status is " << c->status << std::endl;
 	std::cout << " In dispatch\n";
 	std::vector<std::string> args;
 
@@ -347,7 +347,6 @@ void Server::dispatch(Client *c, message m) {
 		return;
 	}
 	if (command != NULL) {
-		std::cout << "before execute\n";
 		command->execute(c, args);
 		delete command;
 	}
@@ -365,7 +364,6 @@ void Server::closeFreeALL(void) {
 
 void Server::updateNicknameInClients(int fd, const std::string &newNickname) {
 	std::map<int, Client *>::iterator clientIt = clients.find(fd);
-
 	if (clientIt != clients.end()) {
 		clientIt->second->setNickname(newNickname);
 	}
@@ -393,3 +391,26 @@ void Server::updateNicknameInChannels(const std::string &oldNickname,
 }
 
 std::vector<Channel *> Server::getChannels() { return channels; }
+
+void Server::unescapeSpecialCharacters(std::string& message) {
+    size_t pos = 0;
+    while ((pos = message.find("\\:", pos)) != std::string::npos) {
+        message.replace(pos, 2, ":");
+    }
+
+    pos = 0;
+    while ((pos = message.find("\\!", pos)) != std::string::npos) {
+        message.replace(pos, 2, "!");
+    }
+
+    size_t lastNewlinePos = message.find_last_of('\n');
+    if (lastNewlinePos != std::string::npos) {
+        message.replace(lastNewlinePos, 1, "\r\n");
+    }
+
+	pos = 0;
+    while ((pos = message.find("\\#", pos)) != std::string::npos) {
+        message.replace(pos, 2, "#");
+    }
+
+}

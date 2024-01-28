@@ -40,6 +40,7 @@ Join::Join(Server *server, bool auth) : Base2(server, auth) {}
 Join::~Join() {}
 
 void Join::execute(Client *client, std::vector<std::string> args) {
+	std::cout << "in client and nickname of client is " << client->getNickname() << std::endl;
 	if (args.empty()) {
 		client->respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
 		    client->getNickname(), "JOIN"));
@@ -55,8 +56,13 @@ void Join::execute(Client *client, std::vector<std::string> args) {
 	Channel *channel = server->getChannel(name);
 
 	if (!channel) {
+		std::cout<< "dfadfasd\n";
 		channel = server->addChannel(name, pass, client);
 	}
+
+	std::cout << "Channel Name: " << name << std::endl;
+	std::cout << "Nickname: " << client->getNickname() << std::endl;
+
 	if (channel->isInChannel(client)) {
 		client->respondWithPrefix(IRCResponse::ERR_USERONCHANNEL(
 		    client->getNickname(), name));
@@ -97,27 +103,31 @@ void Nick::execute(Client *client, std::vector<std::string> args) {
 	}
 	if (client->status != client_state::LOGIN &&
 	    client->status != client_state::REGISTERED) {
+			std::cout << "11111\n";
 		client->respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(client->getNickname()));
 		return;
 	}
 	std::string nickname = args[0];
 	if (!client->nickIsCorrect(nickname)) {
+		std::cout << "2222222\n";
 		client->respondWithPrefix(IRCResponse::ERR_ERRONEUSNICKNAME(
 		    client->getNickname(), nickname));
 		return;
 	}
 	if (server->getClient(nickname)) {
+		std::cout << "33333333\n";
 		client->respondWithPrefix(
 		    IRCResponse::ERR_NICKNAMEINUSE(client->getNickname()));
 		return;
 	}
 	std::string oldNickname = client->getNickname();
-
+	std::cout << "4444444\n";
 	server->updateNicknameInClients(client->getFd(), nickname);
 	server->updateNicknameInChannels(oldNickname, nickname);
-
+	std::cout << "before set in join the nick =name is " << nickname <<std::endl;
 	client->setNickname(nickname);
+	std::cout << "before set in join the nick =name is " << client->getNickname() <<std::endl;
 	client->sendWelcomeMessage();
 	// server->updateNicknameInClients(client->getFd(), nickname);
 	// server->updateNicknameInChannels(client->getNickname(), nickname);
@@ -404,6 +414,7 @@ void Ping::execute(Client *client, std::vector<std::string> args) {
 		    client->getNickname(), "PING"));
 		return;
 	}
+	std::cout <<  "Prefix in ping is " << client->getPrefix() << "\n";
 	client->sendWithLineEnding(
 	    IRCResponse::RPL_PING(client->getPrefix(), args[0]));
 }
