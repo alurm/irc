@@ -17,6 +17,7 @@ objects/%.mk : sources/%.cpp Makefile
 		-M `# Generate a makefile` \
 		-MM `# Don't mention system dependencies` \
 		-MP `# Make a phony target for all headers` \
+		-MT objects/$*.o \
 		$< > $@ \
 	;
 
