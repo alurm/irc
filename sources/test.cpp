@@ -25,7 +25,6 @@ void pass_test() {
 
 				{
 					lexeme l = lexemes[2];
-					std::cout << "l.tag is " << l.tag << std::endl;
 					assert(l.tag == lexeme::carriage_return_line_feed);
 				}
 

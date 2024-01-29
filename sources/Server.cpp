@@ -1,54 +1,49 @@
 #include "Server.hpp"
 #include "Socket.hpp"
 
-Server::Server(const std::string &port, const std::string &pass) :
-	port(port),
-	pass(pass),
-	// Domain -- internet protocol, version 4.
-	// Type -- transfer control protocol.
-	// Protocol -- internet protocol (pseudo protocol).
-	sock(AF_INET, SOCK_STREAM, 0)
-{
-
+Server::Server(const std::string &port, const std::string &pass)
+    : port(port), pass(pass),
+      // Domain -- internet protocol, version 4.
+      // Type -- transfer control protocol.
+      // Protocol -- internet protocol (pseudo protocol).
+      sock(AF_INET, SOCK_STREAM, 0) {
 
 	{
 		int reuse_address = 1;
 		// What does SO_REUSEADDR do?
-		// Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml.
-		if (setsockopt(
-			sock.value,
-			SOL_SOCKET, // Level: socket level: socket.
-			SO_REUSEADDR,
-			&reuse_address,
-			sizeof(reuse_address)
-		) == -1)
-			throw std::runtime_error("Error: Unable to set SO_REUSEADDR on socket.");
+		// Answer:
+		// https://www.unixguide.net/network/socketfaq/4.5.shtml.
+		if (setsockopt(sock.value,
+			       SOL_SOCKET, // Level: socket level: socket.
+			       SO_REUSEADDR, &reuse_address,
+			       sizeof(reuse_address)) == -1)
+			throw std::runtime_error(
+			    "Error: Unable to set SO_REUSEADDR on socket.");
 	}
 
 	struct sockaddr_in serv_addr = {
-		// Internet protocol, version 4.
-		.sin_family = AF_INET,
-		// Bind on all local interfaces.
-		.sin_addr.s_addr = INADDR_ANY,
-		// "htons" -- "host to two network ordered octets" (one short).
-		.sin_port = htons(atoi(port.c_str())),
+	    // Internet protocol, version 4.
+	    .sin_family = AF_INET,
+	    // Bind on all local interfaces.
+	    .sin_addr.s_addr = INADDR_ANY,
+	    // "htons" -- "host to two network ordered octets" (one short).
+	    .sin_port = htons(atoi(port.c_str())),
 	};
 
 	// Static and dynamic casts would not work here.
 	// That's because there is no inheritance involved.
-	if (bind(
-		sock.value,
-		reinterpret_cast<sockaddr *>(&serv_addr),
-		sizeof(serv_addr)
-	) < 0)
+	if (bind(sock.value, reinterpret_cast<sockaddr *>(&serv_addr),
+		 sizeof(serv_addr)) < 0)
 		throw std::runtime_error("Error: Failed to bind the socket.");
 
 	if (listen(sock.value, SOMAXCONN) < 0)
-		throw std::runtime_error("Error: Failed to start listening on the socket.");
+		throw std::runtime_error(
+		    "Error: Failed to start listening on the socket.");
 
 	// File control, file set flags, non blocking.
 	if (fcntl(sock.value, F_SETFL, O_NONBLOCK))
-		throw std::runtime_error("Error: Unable to set socket as non-blocking.");
+		throw std::runtime_error(
+		    "Error: Unable to set socket as non-blocking.");
 }
 
 void Server::connect_client() {
@@ -60,15 +55,18 @@ void Server::connect_client() {
 		// Size is an out parameter to know the actual size.
 		// But we know that sockaddr_in is used.
 		// Therefore, this information is useless.
-		fd = accept(sock.value, reinterpret_cast<sockaddr *>(&addr), &size);
-		if (fd < 0) throw std::runtime_error("Error while accepting a new client!");
+		fd = accept(sock.value, reinterpret_cast<sockaddr *>(&addr),
+			    &size);
+		if (fd < 0)
+			throw std::runtime_error(
+			    "Error while accepting a new client!");
 	}
 
-	pollfd pfd = { .fd = fd, .events = POLLIN };
+	pollfd pfd = {.fd = fd, .events = POLLIN};
 	fds.push_back(pfd);
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) throw std::runtime_error(
-		"Error: setting client fd to non-blocking mode failed!"
-	);
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+		throw std::runtime_error(
+		    "Error: setting client fd to non-blocking mode failed!");
 	char hostname[NI_MAXHOST];
 	if (getnameinfo(reinterpret_cast<sockaddr *>(&addr), sizeof(addr),
 			hostname, NI_MAXHOST, NULL, 0, NI_NUMERICSERV) != 0) {
@@ -80,28 +78,30 @@ void Server::connect_client() {
 	clients.insert(std::make_pair(fd, client));
 
 	char message[1000];
-	sprintf(message, "%s:%d has connected.\n",
-		client.host_name.c_str(), client.port);
+	sprintf(message, "%s:%d has connected.\n", client.host_name.c_str(),
+		client.port);
 	std::cout << message;
 }
 
 void Server::disconnectClient(int fd) {
-	Client &client = clients.at(fd);
-	client.handleChannelLeave();
-	char message[1000];
-	sprintf(message, "%s:%d has disconnected!",
-		client.host_name.c_str(), client.port);
-	std::cout << message << std::endl;
-	clients.erase(fd);
-	std::vector<pollfd>::iterator it_b = fds.begin();
-	std::vector<pollfd>::iterator it_e = fds.end();
-	while (it_b != it_e) {
-		if (it_b->fd == fd) {
-			it_b = fds.erase(it_b);
-			close(fd);
-			break;
-		} else {
-			++it_b;
+	std::map<int, Client>::iterator client = clients.find(fd);
+	if (client != clients.end()) {
+		client->second.handleChannelLeave();
+		char message[1000];
+		sprintf(message, "%s:%d has disconnected!",
+			client->second.host_name.c_str(), client->second.port);
+		std::cout << message << std::endl;
+		clients.erase(fd);
+		std::vector<pollfd>::iterator it_b = fds.begin();
+		std::vector<pollfd>::iterator it_e = fds.end();
+		while (it_b != it_e) {
+			if (it_b->fd == fd) {
+				it_b = fds.erase(it_b);
+				close(fd);
+				break;
+			} else {
+				++it_b;
+			}
 		}
 	}
 }
@@ -153,8 +153,6 @@ struct message Server::get_client_message(int fd) {
 		for (size_t i = 0; i < parsedMessages.size(); ++i) {
 			if (parsedMessages[i].tag == parseme::message) {
 				m = parsedMessages[i].value.message;
-				std::cout << "command is " << m.command
-					  << std::endl;
 			}
 		}
 	}
@@ -163,7 +161,6 @@ struct message Server::get_client_message(int fd) {
 
 void Server::handle_client_message(int fd) {
 	if (clients.count(fd) > 0) {
-		;
 		Client &client = clients.at(fd);
 		message message = this->get_client_message(fd);
 		std::vector<std::string> paramsVector;
@@ -179,18 +176,16 @@ void Server::handle_client_message(int fd) {
 
 void Server::start() {
 	// Be notified about incoming connections.
-	fds.push_back((pollfd){ .fd = sock.value, .events = POLLIN });
+	fds.push_back((pollfd){.fd = sock.value, .events = POLLIN});
 
 	while (true) {
 		// Timeout is -1 to wait for the first event indefinitely.
 		if (poll(fds.data(), fds.size(), -1) < 0)
-			throw std::runtime_error("Error while polling from fds!");
+			throw std::runtime_error(
+			    "Error while polling from fds!");
 
-		for (
-			std::vector<pollfd>::iterator it = fds.begin();
-			it != fds.end();
-			++it
-		) {
+		for (std::vector<pollfd>::iterator it = fds.begin();
+		     it != fds.end(); ++it) {
 			if (it->revents & POLLHUP) {
 				disconnectClient(it->fd);
 				break;
@@ -252,7 +247,6 @@ void Server::dispatch(Client &c, message m) {
 	m.params = NULL;
 
 	if (strcmp(m.command, "PASS") == 0) {
-		std::cout << "in pass\n";
 		command = new Pass(this, false);
 	} else if (strcmp(m.command, "JOIN") == 0) {
 		command = new Join(this, true);
@@ -283,13 +277,14 @@ void Server::dispatch(Client &c, message m) {
 	} else if (strcmp(m.command, "")) {
 		return;
 	} else {
-		c.respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
-		    c.nick_name, m.command));
+		c.respondWithPrefix(
+		    IRCResponse::ERR_UNKNOWNCOMMAND(c.nick_name, m.command));
 		return;
 	}
 
 	// Buggy?
-	if (c.status != client_state::REGISTERED && command->isAuthenticationRequired()) {
+	if (c.status != client_state::REGISTERED &&
+	    command->isAuthenticationRequired()) {
 		c.respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c.nick_name));
 		if (command != NULL) {
@@ -314,8 +309,7 @@ void Server::updateNicknameInClients(int fd, const std::string &newNickname) {
 void Server::updateNicknameInChannels(const std::string &oldNickname,
 				      const std::string &newNickname) {
 	for (size_t i = 0; i < channels.size(); ++i) {
-		std::vector<Client *> channelClients =
-		    channels[i]->clients;
+		std::vector<Client *> channelClients = channels[i]->clients;
 		std::vector<Client *> channelOps = channels[i]->operators;
 
 		for (size_t j = 0; j < channelClients.size(); ++j) {

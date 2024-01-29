@@ -14,7 +14,6 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
-// #include "Base2.hpp"
 #include "Command.hpp"
 #include "Utils.hpp"
 #include "Socket.hpp"
