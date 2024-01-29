@@ -13,21 +13,25 @@ Server::Server(const std::string &port, const std::string &pass) :
 
 	{
 		int reuse_address = 1;
-		// What does SO_REUSEADDR do? Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml
+		// What does SO_REUSEADDR do?
+		// Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml.
 		if (setsockopt(sock.value, SOL_SOCKET, SO_REUSEADDR, &reuse_address,
 			       sizeof(reuse_address)) == -1)
 			throw std::runtime_error("Error: Unable to set SO_REUSEADDR on socket.");
 	}
 
-	struct sockaddr_in serv_addr = {};
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	// Host to two network ordered octets.
-	serv_addr.sin_port = htons(atoi(port.c_str()));
+	struct sockaddr_in serv_addr = {
+		// Internet protocol, version 4.
+		.sin_family = AF_INET,
+		// Bind on all local interfaces.
+		.sin_addr.s_addr = INADDR_ANY,
+		// "htons" -- "host to two network ordered octets" (one short).
+		.sin_port = htons(atoi(port.c_str())),
+	};
 
-	// Static and dynamic casts would not work here because there is no inheritance involved.
-	if (bind(sock.value, reinterpret_cast<sockaddr *>(&serv_addr),
-		 sizeof(serv_addr)) < 0)
+	// Static and dynamic casts would not work here.
+	// That's because there is no inheritance involved.
+	if (bind(sock.value, reinterpret_cast<sockaddr *>(&serv_addr), sizeof(serv_addr)) < 0)
 		throw std::runtime_error("Error: Failed to bind the socket.");
 
 	if (listen(sock.value, SOMAXCONN) < 0)
@@ -172,20 +176,19 @@ void Server::handle_client_message(int fd) {
 }
 
 void Server::start() {
-
 	// Be notified about incoming connections.
-	pollfd srv = { .fd = sock.value, .events = POLLIN };
-
-	fds.push_back(srv);
+	fds.push_back((pollfd){ .fd = sock.value, .events = POLLIN });
 
 	while (true) {
-		// Timeout is -1 to wait for event indefinitely.
-		if (poll(fds.data(), fds.size(), -1) < 0) {
-			throw std::runtime_error(
-			    "Error while polling from fds!");
-		}
+		// Timeout is -1 to wait for the first event indefinitely.
+		if (poll(fds.data(), fds.size(), -1) < 0)
+			throw std::runtime_error("Error while polling from fds!");
 
-		for (std::vector<pollfd>::iterator it = fds.begin(); it != fds.end(); ++it) {
+		for (
+			std::vector<pollfd>::iterator it = fds.begin();
+			it != fds.end();
+			++it
+		) {
 			if (it->revents & POLLHUP) {
 				disconnectClient(it->fd);
 				break;
@@ -301,8 +304,11 @@ void Server::dispatch(Client *c, message m) {
 }
 
 void Server::closeFreeALL(void) {
-	std::map<int, Client *>::iterator it = clients.begin();
-	for (; it != clients.end(); ++it) {
+	for (
+		std::map<int, Client *>::iterator it = clients.begin();
+		it != clients.end();
+		++it
+	) {
 		close(it->first);
 		if (it->second)
 			delete it->second;

@@ -27,7 +27,7 @@ class Server {
 	const std::string port;
 	const std::string pass;
 	Socket sock;
-	// File descriptors events on which we want to be notified about.
+	// Event holders.
 	std::vector<pollfd> fds;
 	std::map<int, Client *> clients;
 	std::vector<Channel *> channels;
