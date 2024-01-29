@@ -1,4 +1,3 @@
-#include "dispatch.cpp"
 #include "Parser.hpp"
 
 void pass_test() {
@@ -120,7 +119,7 @@ void pass_test() {
 		assert(parsemes.size() == 1 && parsemes[0].tag == parseme::message);
 		message m = parsemes[0].value.message;
 		assert(strcmp(m.command, "PASS") == 0);
-		
+
 		std::cout << "Test passed!\n";
 	}
 }
