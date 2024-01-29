@@ -1,6 +1,6 @@
 NAME := ircserv
 
-$(NAME) : $(addprefix objects/, $(addsuffix .o, Utils Server main Client parse Command Channel)) Makefile
+$(NAME) : $(addprefix objects/, $(addsuffix .o, Utils Server main Client parse Socket Command Channel)) Makefile
 	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 
 .PHONY : all

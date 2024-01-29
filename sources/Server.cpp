@@ -1,25 +1,22 @@
 #include "Server.hpp"
+#include "Socket.hpp"
 
-Server::Server(const std::string &port, const std::string &pass)
-    : port(port), pass(pass) {
-	sock = initializeSocket();
-}
+Server::Server(const std::string &port, const std::string &pass) :
+	port(port),
+	pass(pass),
+	// Domain -- internet protocol, version 4.
+	// Type -- transfer control protocol.
+	// Protocol -- internet protocol (pseudo protocol).
+	sock(AF_INET, SOCK_STREAM, 0)
+{
 
-int Server::initializeSocket() {
-	int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock_fd < 0) {
-		throw std::runtime_error("Error: Unable to open the socket!");
-	}
 
 	{
-		int optval = 1;
+		int reuse_address = 1;
 		// What does SO_REUSEADDR do? Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml
-		if (setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval,
-			       sizeof(optval)) == -1) {
-			close(sock_fd);
-			throw std::runtime_error(
-			    "Error: Unable to set SO_REUSEADDR on socket.");
-		}
+		if (setsockopt(sock.value, SOL_SOCKET, SO_REUSEADDR, &reuse_address,
+			       sizeof(reuse_address)) == -1)
+			throw std::runtime_error("Error: Unable to set SO_REUSEADDR on socket.");
 	}
 
 	struct sockaddr_in serv_addr = {};
@@ -29,23 +26,16 @@ int Server::initializeSocket() {
 	serv_addr.sin_port = htons(atoi(port.c_str()));
 
 	// Static and dynamic casts would not work here because there is no inheritance involved.
-	if (bind(sock_fd, reinterpret_cast<sockaddr *>(&serv_addr),
-		 sizeof(serv_addr)) < 0) {
+	if (bind(sock.value, reinterpret_cast<sockaddr *>(&serv_addr),
+		 sizeof(serv_addr)) < 0)
 		throw std::runtime_error("Error: Failed to bind the socket.");
-	}
 
-	if (listen(sock_fd, SOMAXCONN) < 0) {
-		throw std::runtime_error(
-		    "Error: Failed to start listening on the socket.");
-	}
+	if (listen(sock.value, SOMAXCONN) < 0)
+		throw std::runtime_error("Error: Failed to start listening on the socket.");
 
 	// File control, file set flags, non blocking.
-	if (fcntl(sock_fd, F_SETFL, O_NONBLOCK)) {
-		throw std::runtime_error(
-		    "Error: Unable to set socket as non-blocking.");
-	}
-
-	return sock_fd;
+	if (fcntl(sock.value, F_SETFL, O_NONBLOCK))
+		throw std::runtime_error("Error: Unable to set socket as non-blocking.");
 }
 
 Server::~Server() {
@@ -62,20 +52,15 @@ void Server::connect_client() {
 		// Size is an out parameter to know the actual size.
 		// But we know that sockaddr_in is used.
 		// Therefore, this information is useless.
-		fd = accept(sock, reinterpret_cast<sockaddr *>(&addr), &size);
-		if (fd < 0) {
-			close(sock);
-			throw std::runtime_error("Error while accepting a new client!");
-		}
+		fd = accept(sock.value, reinterpret_cast<sockaddr *>(&addr), &size);
+		if (fd < 0) throw std::runtime_error("Error while accepting a new client!");
 	}
 
 	pollfd pfd = { .fd = fd, .events = POLLIN };
 	fds.push_back(pfd);
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-		close(sock);
-		throw std::runtime_error(
-		    "Error: setting client fd to non-blocking mode failed!");
-	}
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) throw std::runtime_error(
+		"Error: setting client fd to non-blocking mode failed!"
+	);
 	char hostname[NI_MAXHOST];
 	if (getnameinfo(reinterpret_cast<sockaddr *>(&addr), sizeof(addr),
 			hostname, NI_MAXHOST, NULL, 0, NI_NUMERICSERV) != 0) {
@@ -189,7 +174,7 @@ void Server::handle_client_message(int fd) {
 void Server::start() {
 
 	// Be notified about incoming connections.
-	pollfd srv = { .fd = sock, .events = POLLIN };
+	pollfd srv = { .fd = sock.value, .events = POLLIN };
 
 	fds.push_back(srv);
 
@@ -207,12 +192,12 @@ void Server::start() {
 			}
 
 			if (it->revents & POLLIN) {
-				if (it->fd == sock) {
+				if (it->fd == sock.value) {
 					connect_client();
 					break;
 				}
 			}
-			
+
 			handle_client_message(it->fd);
 		}
 		// system("leaks ircserv");

@@ -17,15 +17,16 @@
 // #include "Base2.hpp"
 #include "Command.hpp"
 #include "Utils.hpp"
+#include "Socket.hpp"
 
 class Client;
 class Channel;
 
 class Server {
       private:
-	int sock;
 	const std::string port;
 	const std::string pass;
+	Socket sock;
 	// File descriptors events on which we want to be notified about.
 	std::vector<pollfd> fds;
 	std::map<int, Client *> clients;
