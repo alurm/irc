@@ -102,6 +102,7 @@ void Client::handleChannelLeave() {
 	chan->sendAll(IRCResponse::RPL_PART(getPrefix(), chan->name));
 	chan->handleClientRemoval(this);
 
+	// Buggy. This is nil.
 	std::string message = nick_name + " has left the channel " + chan->name;
 	std::cout << message << std::endl;
 }

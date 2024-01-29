@@ -20,6 +20,7 @@ Bugs
 		^C
 	Output
 	- memory leak
+
 -
 	Input
 		./ircserv 8080 1 &
@@ -28,15 +29,33 @@ Bugs
 	Output
 	- Pass handler is not executed
 
+-
+	Input
+		./ircserv 8080 1 &
+		nc -c localhost 8080
+		PASS 1
+		NICK foo
+		USER a b c d
+		^Z
+		nc -c localhost 8080
+		PASS 1
+		NICK bar
+	Output
+		(1) 462 :You may not register
+
 Secret knowledge
 
 [ ] Do not throw exceptions.
 [ ] Do not leak memory.
 [ ] Memory must be freed in destructors when interfacting with C++.
-[ ] What about POLLOUT on client sockets? sources/Client.cpp:48, sources/Server.cpp:72
+[ ] Partial writes are not handled.
+	[ ] What about POLLOUT on client sockets? sources/Client.cpp:48, sources/Server.cpp:72
 [ ] Verify potentially buggy functions.
-[ ] Get rid of getX.
+[x] Get rid of getX.
+[ ] Get rid of unnecessary forward declarations.
+[ ] ^D does not work.
+[ ] Line break is not a delimiter by itself, only CRLF is.
+[ ] Check ^Z. It disconnects for some reason.
 
 [ ] Can there be client duplicates?
 [ ] What's the identity? Currently it is a pointer. Should be some other name?
-

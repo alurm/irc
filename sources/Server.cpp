@@ -15,8 +15,13 @@ Server::Server(const std::string &port, const std::string &pass) :
 		int reuse_address = 1;
 		// What does SO_REUSEADDR do?
 		// Answer: https://www.unixguide.net/network/socketfaq/4.5.shtml.
-		if (setsockopt(sock.value, SOL_SOCKET, SO_REUSEADDR, &reuse_address,
-			       sizeof(reuse_address)) == -1)
+		if (setsockopt(
+			sock.value,
+			SOL_SOCKET, // Level: socket level: socket.
+			SO_REUSEADDR,
+			&reuse_address,
+			sizeof(reuse_address)
+		) == -1)
 			throw std::runtime_error("Error: Unable to set SO_REUSEADDR on socket.");
 	}
 
@@ -31,7 +36,11 @@ Server::Server(const std::string &port, const std::string &pass) :
 
 	// Static and dynamic casts would not work here.
 	// That's because there is no inheritance involved.
-	if (bind(sock.value, reinterpret_cast<sockaddr *>(&serv_addr), sizeof(serv_addr)) < 0)
+	if (bind(
+		sock.value,
+		reinterpret_cast<sockaddr *>(&serv_addr),
+		sizeof(serv_addr)
+	) < 0)
 		throw std::runtime_error("Error: Failed to bind the socket.");
 
 	if (listen(sock.value, SOMAXCONN) < 0)
