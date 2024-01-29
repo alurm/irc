@@ -14,23 +14,23 @@ Pass::~Pass() {}
 void Pass::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "PASS"));
+		    client.nick_name, "PASS"));
 		return;
 	}
 
-	if (client.isInRegisteredState()) {
+	if (client.status == client_state::REGISTERED) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_ALREADYREGISTERED(client.getNickname()));
+		    IRCResponse::ERR_ALREADYREGISTERED(client.nick_name));
 		return;
 	}
 
-	if (server->getPassword() != args[0]) {
+	if (server->pass != args[0]) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_PASSWDMISMATCH(client.getNickname()));
+		    IRCResponse::ERR_PASSWDMISMATCH(client.nick_name));
 		return;
 	}
 
-	client.setState(client_state::LOGIN);
+	client.status = client_state::LOGIN;
 }
 
 // JOIN
@@ -41,14 +41,14 @@ Join::~Join() {}
 void Join::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "JOIN"));
+		    client.nick_name, "JOIN"));
 		return;
 	}
 	std::string name = args[0];
 	std::string pass = args.size() > 1 ? args[1] : "";
 	if (name[0] != '#' && name[0] != '&') {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_BADCHANMASK(client.getNickname(), name));
+		    IRCResponse::ERR_BADCHANMASK(client.nick_name, name));
 		return;
 	}
 	Channel *channel = server->getChannel(name);
@@ -59,24 +59,25 @@ void Join::execute(Client &client, std::vector<std::string> args) {
 
 	if (channel->isInChannel(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_USERONCHANNEL(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
-	if (channel->isInviteOnly()) {
+	if (channel->inviteOnly) {
 		client.respondWithPrefix(IRCResponse::ERR_INVITEONLYCHAN(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
-	if (channel->getLimit() > 0 &&
-	    channel->getClientCount() >= channel->getLimit()) {
+	if (channel->limit > 0 &&
+	    channel->clients.size() >= channel->limit) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANNELISFULL(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
 
-	if (channel->getKey() != pass) {
+	// Buggy?
+	if (channel->key != pass) {
 		client.respondWithPrefix(IRCResponse::ERR_BADCHANNELKEY(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
 	client.handleChannelJoin(channel);
@@ -91,35 +92,31 @@ Nick::~Nick() {}
 void Nick::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty() || args[0].empty()) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NONICKNAMEGIVEN(client.getNickname()));
+		    IRCResponse::ERR_NONICKNAMEGIVEN(client.nick_name));
 		return;
 	}
 	if (client.status != client_state::LOGIN &&
 	    client.status != client_state::REGISTERED) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NOTREGISTERED(client.getNickname()));
+		    IRCResponse::ERR_NOTREGISTERED(client.nick_name));
 		return;
 	}
 	std::string nickname = args[0];
 	if (!client.nickIsCorrect(nickname)) {
 		client.respondWithPrefix(IRCResponse::ERR_ERRONEUSNICKNAME(
-		    client.getNickname(), nickname));
+		    client.nick_name, nickname));
 		return;
 	}
 	if (server->getClient(nickname)) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NICKNAMEINUSE(client.getNickname()));
+		    IRCResponse::ERR_NICKNAMEINUSE(client.nick_name));
 		return;
 	}
-	std::string oldNickname = client.getNickname();
-	server->updateNicknameInClients(client.getFd(), nickname);
+	std::string oldNickname = client.nick_name;
+	server->updateNicknameInClients(client.fd, nickname);
 	server->updateNicknameInChannels(oldNickname, nickname);
-	client.setNickname(nickname);
+	client.nick_name = nickname;
 	client.sendWelcomeMessage();
-	// server->updateNicknameInClients(client.getFd(), nickname);
-	// server->updateNicknameInChannels(client.getNickname(), nickname);
-	// client.setNickname(nickname);
-	// client.sendWelcomeMessage();
 }
 
 // USER
@@ -128,23 +125,23 @@ User::User(Server *server, bool auth) : Base2(server, auth) {}
 User::~User() {}
 
 void User::execute(Client &client, std::vector<std::string> args) {
-	if (client.isInRegisteredState()) {
+	if (client.status == client_state::REGISTERED) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_ALREADYREGISTERED(client.getNickname()));
+		    IRCResponse::ERR_ALREADYREGISTERED(client.nick_name));
 		return;
 	}
 	if (client.status != client_state::LOGIN) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NOTREGISTERED(client.getNickname()));
+		    IRCResponse::ERR_NOTREGISTERED(client.nick_name));
 		return;
 	}
 	if (args.size() < 4) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "USER"));
+		    client.nick_name, "USER"));
 		return;
 	}
-	client.setUsername(args[0]);
-	client.setRealname(args[3]);
+	client.user_name = args[0];
+	client.real_name = args[3];
 	client.sendWelcomeMessage();
 }
 
@@ -162,7 +159,7 @@ void Quit::execute(Client &client, std::vector<std::string> args) {
 	std::string reason = args.empty() ? "Leaving..." : args.at(0);
 	client.respondWithPrefix(
 	    IRCResponse::RPL_QUIT(client.getPrefix(), reason));
-	server->disconnectClient(client.getFd());
+	server->disconnectClient(client.fd);
 }
 
 // MODE
@@ -173,7 +170,7 @@ Mode::~Mode() {}
 void Mode::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "MODE"));
+		    client.nick_name, "MODE"));
 		return;
 	}
 
@@ -182,13 +179,13 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 
 	if (!channel) {
 		client.respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
-		    client.getNickname(), channel_name));
+		    client.nick_name, channel_name));
 		return;
 	}
 
 	if (!channel->isOperator(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
-		    client.getNickname(), channel_name));
+		    client.nick_name, channel_name));
 		return;
 	}
 	if (args.size() > 1) {
@@ -199,12 +196,12 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 			bool condition = (mode == "-i") ? false : true;
 			mode = (mode == "i") ? "+i" : mode;
 
-			channel->setInviteOnly(condition);
+			channel->inviteOnly = condition;
 			client.sendWithLineEnding(IRCResponse::RPL_MODE(
 			    client.getPrefix(), channel_name, mode));
 			client.respondWithPrefix(
 			    IRCResponse::RPL_CHANNELMODEIS(
-				client.getNickname(), channel_name, mode));
+				client.nick_name, channel_name, mode));
 		}
 
 		// MODE +/- t
@@ -212,12 +209,12 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 			bool condition = (mode == "-t") ? false : true;
 			mode = (mode == "t") ? "+t" : mode;
 
-			channel->setTopicMode(condition);
+			channel->topicMode = condition;
 			client.sendWithLineEnding(IRCResponse::RPL_MODE(
 			    client.getPrefix(), channel_name, mode));
 			client.respondWithPrefix(
 			    IRCResponse::RPL_CHANNELMODEIS(
-				client.getNickname(), channel_name, mode));
+				client.nick_name, channel_name, mode));
 		}
 
 		// MODE +/- k
@@ -227,21 +224,21 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 				key = args[2];
 
 			if (mode != "-k") {
-				if (channel->getKey() != "") {
+				if (channel->key != "") {
 					client.respondWithPrefix(
 					    IRCResponse::ERR_KEYSET(
-						client.getNickname(), mode));
+						client.nick_name, mode));
 					return;
 				}
 
-				channel->setKey(key);
+				channel->key = key;
 				client.sendWithLineEnding(
 				    IRCResponse::RPL_MODE(client.getPrefix(),
 							  channel_name,
 							  "+k " + key));
 			} else {
-				if (channel->getKey() == key) {
-					channel->setKey("");
+				if (channel->key == key) {
+					channel->key = "";
 					client.sendWithLineEnding(
 					    IRCResponse::RPL_MODE(
 						client.getPrefix(),
@@ -249,21 +246,21 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 				} else {
 					client.respondWithPrefix(
 					    IRCResponse::ERR_BADCHANNELKEY(
-						client.getNickname(),
+						client.nick_name,
 						mode + " :invalid key"));
 					return;
 				}
 			}
 			client.respondWithPrefix(
 			    IRCResponse::RPL_CHANNELMODEIS(
-				client.getNickname(), channel_name, mode));
+				client.nick_name, channel_name, mode));
 		}
 		// MODE +/- o
 		else if (mode == "o" || mode == "+o" || mode == "-o") {
 			if (args.size() < 3) {
 				client.respondWithPrefix(
 				    IRCResponse::ERR_NEEDMOREPARAMS(
-					client.getNickname(), "MODE"));
+					client.nick_name, "MODE"));
 				return;
 			}
 
@@ -273,7 +270,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 			if (target_pointer == 0) {
 				client.respondWithPrefix(
 					IRCResponse::ERR_USERNOTINCHANNEL(
-						client.getNickname(), nickname, channel_name
+						client.nick_name, nickname, channel_name
 					)
 				);
 				return; // Buggy?
@@ -299,7 +296,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 			}
 			client.respondWithPrefix(
 			    IRCResponse::RPL_CHANNELMODEIS(
-				client.getNickname(), channel_name, mode));
+				client.nick_name, channel_name, mode));
 		}
 		// MODE +/- l
 		else if (mode == "l" || mode == "+l" || mode == "-l") {
@@ -307,7 +304,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 				if (args.size() < 3) {
 					client.respondWithPrefix(
 					    IRCResponse::ERR_NEEDMOREPARAMS(
-						client.getNickname(), "MODE"));
+						client.nick_name, "MODE"));
 					return;
 				}
 
@@ -315,16 +312,18 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 				if (new_limit < 1) {
 					client.respondWithPrefix(
 					    IRCResponse::ERR_UNKNOWNMODE(
-						client.getNickname(), mode,
+						client.nick_name, mode,
 						" :limit must be greater than "
 						"0"));
 					return;
 				}
-				channel->setChannelLimit(new_limit);
+				channel->limit = new_limit;
 			} else {
-				channel->setChannelLimit(
-				    0); // unlimit in my case defaul is 10
-					// ?????????
+				// Buggy?
+				//
+				// Unlimit in my case default is 10.
+				// ?????????
+				channel->limit = 0;
 			}
 
 			client.respondWithPrefix(
@@ -334,7 +333,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 			return;
 		} else {
 			client.respondWithPrefix(IRCResponse::ERR_UNKNOWNMODE(
-			    client.getNickname(), mode,
+			    client.nick_name, mode,
 			    " :is unknown mode char to me"));
 			return;
 		}
@@ -349,33 +348,33 @@ Topic::~Topic() {}
 void Topic::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "TOPIC"));
+		    client.nick_name, "TOPIC"));
 		return;
 	}
 	std::string channel_name = args[0];
 	Channel *channel = server->getChannel(channel_name);
 	if (!channel) {
 		client.respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
-		    client.getNickname(), channel_name));
+		    client.nick_name, channel_name));
 		return;
 	}
 	if (!channel->isInChannel(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_NOTONCHANNEL(
-		    client.getNickname(), channel_name));
+		    client.nick_name, channel_name));
 		return;
 	}
 	if (!channel->isOperator(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
-		    client.getNickname(), channel_name));
+		    client.nick_name, channel_name));
 		return;
 	}
-	if (channel->topicModeIsOn() == false) {
+	if (channel->topicMode == false) {
 		client.sendWithLineEnding(
 		    IRCResponse::ERR_NOCHANMODES(channel_name));
 		return;
 	}
 	if (args.size() == 1) {
-		std::string topic = channel->getTopic();
+		std::string topic = channel->topic;
 		if (topic.empty()) {
 			client.sendWithLineEnding(
 			    IRCResponse::RPL_NOTOPIC(channel_name));
@@ -383,10 +382,8 @@ void Topic::execute(Client &client, std::vector<std::string> args) {
 			client.sendWithLineEnding(
 			    IRCResponse::RPL_TOPIC(channel_name, topic));
 		}
-	} else {
-		std::string topic = args[1];
-		channel->setTopic(topic);
-	}
+	} else
+		channel->topic = args[1];
 }
 
 // Ping
@@ -398,7 +395,7 @@ Ping::~Ping() {}
 void Ping::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "PING"));
+		    client.nick_name, "PING"));
 		return;
 	}
 	client.sendWithLineEnding(
@@ -414,12 +411,12 @@ PrivMsg::~PrivMsg() {}
 void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "PRIVMSG"));
+		    client.nick_name, "PRIVMSG"));
 		return;
 	}
 	if (args.size() < 2) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NOTEXTTOSEND(client.getNickname()));
+		    IRCResponse::ERR_NOTEXTTOSEND(client.nick_name));
 		return;
 	}
 	std::vector<std::string> targets;
@@ -444,13 +441,13 @@ void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 			if (!channel) {
 				client.sendWithLineEnding(
 				    IRCResponse::ERR_NOSUCHNICK(
-					client.getNickname(), targets[i]));
+					client.nick_name, targets[i]));
 				return;
 			}
 			if (!channel->isInChannel(client)) {
 				client.sendWithLineEnding(
 				    IRCResponse::ERR_CANNOTSENDTOCHAN(
-					client.getNickname(), targets[i]));
+					client.nick_name, targets[i]));
 				return;
 			}
 			channel->sending(client, message, "PRIVMSG");
@@ -473,7 +470,7 @@ void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 			if (!cli) {
 				client.respondWithPrefix(
 				    IRCResponse::ERR_NOSUCHNICK(
-					client.getNickname(), targets[i]));
+					client.nick_name, targets[i]));
 				return;
 			}
 
@@ -493,7 +490,7 @@ Pong::~Pong() {}
 void Pong::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "PONG"));
+		    client.nick_name, "PONG"));
 		return;
 	}
 	client.sendWithLineEnding(
@@ -509,7 +506,7 @@ Kick::~Kick() {}
 void Kick::execute(Client &client, std::vector<std::string> args) {
 	if (args.size() < 2) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "KICK"));
+		    client.nick_name, "KICK"));
 		return;
 	}
 
@@ -528,29 +525,30 @@ void Kick::execute(Client &client, std::vector<std::string> args) {
 			it++;
 		}
 	}
-	Channel *channel = client.getChannel();
-	if (!channel || channel->getName() != name) {
+	Channel *channel = client.chan;
+	// Buggy?
+	if (!channel || channel->name != name) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NOTONCHANNEL(client.getNickname(), name));
+		    IRCResponse::ERR_NOTONCHANNEL(client.nick_name, name));
 		return;
 	}
 
-	if (channel->getAdmin() != &client) {
+	if (channel->admin != &client) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
 
 	Client *dest = server->getClient(target);
 	if (!dest) {
 		client.respondWithPrefix(
-		    IRCResponse::ERR_NOSUCHNICK(client.getNickname(), target));
+		    IRCResponse::ERR_NOSUCHNICK(client.nick_name, target));
 		return;
 	}
 
-	if (!dest->getChannel() || dest->getChannel() != channel) {
+	if (!dest->chan || dest->chan != channel) {
 		client.respondWithPrefix(IRCResponse::ERR_USERNOTINCHANNEL(
-		    client.getNickname(), dest->getNickname(), name));
+		    client.nick_name, dest->nick_name, name));
 		return;
 	}
 	channel->kick(client, *dest, reason);
@@ -565,7 +563,7 @@ Invite::~Invite() {}
 void Invite::execute(Client &client, std::vector<std::string> args) {
 	if (args.size() < 2) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "WHO"));
+		    client.nick_name, "WHO"));
 		return;
 	}
 
@@ -575,7 +573,7 @@ void Invite::execute(Client &client, std::vector<std::string> args) {
 	Client *target_pointer = server->getClient(nickName);
 	if (target_pointer == 0) {
 		client.respondWithPrefix(
-			IRCResponse::ERR_NOSUCHNICK(client.getNickname(), nickName)
+			IRCResponse::ERR_NOSUCHNICK(client.nick_name, nickName)
 		);
 		return; // Buggy?
 	}
@@ -585,38 +583,38 @@ void Invite::execute(Client &client, std::vector<std::string> args) {
 	Channel *channel = server->getChannel(channelName);
 	if (!channel) {
 		client.respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
-		    client.getNickname(), channelName));
+		    client.nick_name, channelName));
 		return;
 	}
 
 	if (!channel->isInChannel(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_NOTONCHANNEL(
-		    client.getNickname(), channelName));
+		    client.nick_name, channelName));
 		return;
 	}
 
 	if (!channel->isOperator(client)) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANOPRIVSNEEDED(
-		    client.getNickname(), channelName));
+		    client.nick_name, channelName));
 		return;
 	}
 
 	if (channel->isInChannel(cli)) {
 		client.respondWithPrefix(IRCResponse::ERR_USERONCHANNEL(
-		    client.getNickname(), channelName));
+		    client.nick_name, channelName));
 		return;
 	}
 
 	if (channel->channelIsFull()) {
 		client.respondWithPrefix(IRCResponse::ERR_CHANNELISFULL(
-		    client.getNickname(), channelName));
+		    client.nick_name, channelName));
 		return;
 	}
 
 	cli.sendWithLineEnding(IRCResponse::RPL_INVITE(client.getPrefix(),
 							nickName, channelName));
 	client.respondWithPrefix(IRCResponse::RPL_INVITING(
-	    client.getNickname(), nickName, channelName));
+	    client.nick_name, nickName, channelName));
 	cli.handleChannelJoin(channel);
 }
 
@@ -629,17 +627,17 @@ Part::~Part() {}
 void Part::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "PART"));
+		    client.nick_name, "PART"));
 		return;
 	}
 
 	std::string name = args[0];
 	Channel *channel = server->getChannel(name);
 
-	if (!channel || !client.getChannel() ||
-	    client.getChannel()->getName() != name) {
+	if (!channel || !client.chan ||
+	    client.chan->name != name) {
 		client.respondWithPrefix(IRCResponse::ERR_NOSUCHCHANNEL(
-		    client.getNickname(), name));
+		    client.nick_name, name));
 		return;
 	}
 
@@ -654,7 +652,7 @@ Who::~Who() {}
 void Who::execute(Client &client, std::vector<std::string> args) {
 	if (args.empty()) {
 		client.respondWithPrefix(IRCResponse::ERR_NEEDMOREPARAMS(
-		    client.getNickname(), "WHO"));
+		    client.nick_name, "WHO"));
 		return;
 	}
 
@@ -663,12 +661,12 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 		if (!channel) {
 			client.respondWithPrefix(
 			    IRCResponse::ERR_NOSUCHCHANNEL(
-				client.getNickname(), args[0]));
+				client.nick_name, args[0]));
 			return;
 		}
 		if (!channel->isInChannel(client)) {
 			client.respondWithPrefix(IRCResponse::ERR_NOTONCHANNEL(
-			    client.getNickname(), args[0]));
+			    client.nick_name, args[0]));
 			return;
 		}
 		int mode = (args.size() > 1 && args[1] == "o") ? 1 : 0;
@@ -679,14 +677,14 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 	Client *cli = server->getClient(args[0]);
 	if (!cli) {
 		client.respondWithPrefix(IRCResponse::ERR_NOSUCHNICK(
-		    client.getNickname(), args[0]));
+		    client.nick_name, args[0]));
 		return;
 	}
 
 	client.sendWithLineEnding(IRCResponse::RPL_WHOREPLY(
-	    client.getNickname(), "*", client.getUsername(),
-	    client.getHostname(), client.getNickname(), "H",
-	    client.getRealname()));
+	    client.nick_name, "*", client.user_name,
+	    client.host_name, client.nick_name, "H",
+	    client.real_name));
 	client.sendWithLineEnding(
-	    IRCResponse::RPL_ENDOFWHO(client.getNickname(), args[0]));
+	    IRCResponse::RPL_ENDOFWHO(client.nick_name, args[0]));
 }

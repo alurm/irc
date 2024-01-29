@@ -8,9 +8,10 @@
 #include <numeric>
 #include <string>
 
-class Server;
-class Client;
+struct Client;
+struct Server;
 
+// Buggy?
 class Base2 {
       protected:
 	Server *server;

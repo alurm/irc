@@ -19,20 +19,20 @@
 #include "Utils.hpp"
 #include "Socket.hpp"
 
-class Client;
-class Channel;
+struct Channel;
+struct Client;
 
-class Server {
-      private:
+struct Server {
 	const std::string port;
 	const std::string pass;
 	Socket sock;
+
 	// Event holders.
 	std::vector<pollfd> fds;
+
 	std::map<int, Client> clients;
 	std::vector<Channel *> channels;
 
-      public:
 	Server(const std::string &port, const std::string &pass);
 	int initializeSocket();
 	void start();
@@ -41,14 +41,12 @@ class Server {
 	void handle_client_message(int fd);
 	struct message get_client_message(int fd);
 	void dispatch(Client &c, message m);
-	std::string getPassword() const;
 	Client *getClient(const std::string &nickname);
 	Channel *getChannel(const std::string &name);
 	Channel *addChannel(const std::string &name, const std::string &key,
 			    Client &client);
 	void updateNicknameInClients(int fd, const std::string& newNickname);
 	void updateNicknameInChannels(const std::string& oldNickname, const std::string& newNickname);
-	std::vector<Channel *>  getChannels();
 };
 
 #endif

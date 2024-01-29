@@ -2,14 +2,15 @@
 #define STATE_HPP
 
 namespace client_state {
-    enum ClientState { 
-        HANDSHAKE, 
-        LOGIN, 
-        REGISTERED, 
-        DISCONNECTED 
+    enum ClientState {
+        HANDSHAKE,
+        LOGIN,
+        REGISTERED,
+        DISCONNECTED
     };
-    
-    extern ClientState state; 
+
+    // Buggy?
+    extern ClientState state;
 }
 
 #endif

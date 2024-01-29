@@ -15,29 +15,10 @@ bool Client::nickIsCorrect(std::string buffer) {
 	return true;
 }
 
-int Client::getPort() const { return port; }
-int Client::getFd() const { return fd; }
-std::string Client::getNickname() const { return nick_name; }
-std::string Client::getUsername() const { return user_name; }
-std::string Client::getRealname() const { return real_name; }
-std::string Client::getHostname() const { return host_name; }
 std::string Client::getPrefix() const {
 	std::string username = user_name.empty() ? "" : "!" + user_name;
 	std::string hostname = host_name.empty() ? "" : "@" + host_name;
 	return nick_name + username + hostname;
-}
-Channel *Client::getChannel() const { return chan; }
-
-void Client::setNickname(const std::string &nickname) {
-	sendWithLineEnding(":" + nick_name + " NICK " + nickname);
-	this->nick_name = nickname;
-}
-void Client::setUsername(const std::string &username) { user_name = username; }
-void Client::setRealname(const std::string &realname) { real_name = realname; }
-void Client::setState(client_state::ClientState state) { status = state; }
-void Client::setChannel(Channel *channel) { chan = channel; }
-bool Client::isInRegisteredState() const {
-	return status == client_state::REGISTERED;
 }
 
 void Client::sendWithLineEnding(const std::string &message) const {
@@ -76,7 +57,7 @@ void Client::handleChannelJoin(Channel *channel) {
 		return;
 	}
 
-	channel->add_client(this);
+	channel->clients.push_back(this);
 	chan = channel;
 
 	std::string users;
@@ -86,32 +67,31 @@ void Client::handleChannelJoin(Channel *channel) {
 		users += *it + " ";
 	}
 	std::string joinedUsers = users.empty() ? "" : " " + users;
-	std::string channelName = channel->getName();
 
-    for(size_t i = 0; i < channel->getClients().size(); ++i)
-        channel->getClients()[i]->sendWithLineEnding(IRCResponse::RPL_JOIN(this->getPrefix(), channelName));
+    for(size_t i = 0; i < channel->clients.size(); ++i)
+        channel->clients[i]->sendWithLineEnding(IRCResponse::RPL_JOIN(this->getPrefix(), channel->name));
 
-	std::string topic = channel->getTopic();
+	std::string topic = channel->topic;
 	if (topic.empty())
 	{
 		this->sendWithLineEnding(IRCResponse::RPL_MSG(
-		    this->getPrefix(), "PRIVMSG", channelName,
-		    IRCResponse::RPL_NOTOPIC(channelName)));
+		    this->getPrefix(), "PRIVMSG", channel->name,
+		    IRCResponse::RPL_NOTOPIC(channel->name)));
 	}
 	else {
 		this->sendWithLineEnding(
-		    IRCResponse::RPL_TOPIC(channelName, topic));
+		    IRCResponse::RPL_TOPIC(channel->name, topic));
 	}
 
 	this->sendWithLineEnding(IRCResponse::RPL_MSG(
-	    this->getPrefix(), "PRIVMSG", channelName,
-	    IRCResponse::RPL_NAMREPLY(nick_name, channelName, users)));
+	    this->getPrefix(), "PRIVMSG", channel->name,
+	    IRCResponse::RPL_NAMREPLY(nick_name, channel->name, users)));
 	this->sendWithLineEnding(IRCResponse::RPL_MSG(
-	    this->getPrefix(), "PRIVMSG", channelName,
-	    IRCResponse::RPL_ENDOFNAMES(nick_name, channelName)));
+	    this->getPrefix(), "PRIVMSG", channel->name,
+	    IRCResponse::RPL_ENDOFNAMES(nick_name, channel->name)));
 
 	std::string message =
-	    nick_name + " has joined the channel " + channelName + joinedUsers;
+	    nick_name + " has joined the channel " + channel->name + joinedUsers;
 	std::cout << message << std::endl;
 }
 
@@ -119,12 +99,10 @@ void Client::handleChannelLeave() {
 	if (!chan)
 		return;
 
-	const std::string name = chan->getName();
-
-	chan->sendAll(IRCResponse::RPL_PART(getPrefix(), chan->getName()));
+	chan->sendAll(IRCResponse::RPL_PART(getPrefix(), chan->name));
 	chan->handleClientRemoval(this);
 
-	std::string message = nick_name + " has left the channel " + name;
+	std::string message = nick_name + " has left the channel " + chan->name;
 	std::cout << message << std::endl;
 }
 
@@ -134,7 +112,7 @@ Client *Channel::getClientByNick(std::string nickname) {
 		it != clients.end();
 		++it
 	)
-		if ((*it)->getNickname() == nickname) return *it;
+		if ((*it)->nick_name == nickname) return *it;
 
 	return NULL;
 }

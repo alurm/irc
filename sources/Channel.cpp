@@ -2,14 +2,12 @@
 
 Channel::Channel(const std::string &name, const std::string &key, Client &admin)
     : name(name), admin(&admin), key(key), limit(10), message(false) {
-		topic = "";
-		inviteOnly = false;
-		topicMode = false;
-		admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name, "you are the new admin"));
-		operators.push_back(&admin);
-	}
-
-std::string Channel::getName() const { return name; }
+	topic = "";
+	inviteOnly = false;
+	topicMode = false;
+	admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name, "you are the new admin"));
+	operators.push_back(&admin);
+}
 
 std::vector<std::string> Channel::getNicknames() {
 	std::vector<std::string> nicknames;
@@ -18,7 +16,7 @@ std::vector<std::string> Channel::getNicknames() {
 		Client *client = *it;
 
 		std::string nick =
-		    (client == admin ? "@" : "") + client->getNickname();
+		    (client == admin ? "@" : "") + client->nick_name;
 		nicknames.push_back(nick);
 	}
 
@@ -30,12 +28,6 @@ void Channel::sendAll(const std::string &message) {
 		(*it)->sendWithLineEnding(message);
 	}
 }
-
-std::string Channel::getKey() const { return key; }
-
-size_t Channel::getLimit() const { return limit; }
-
-size_t Channel::getClientCount() const { return clients.size(); }
 
 void Channel::handleClientRemoval(Client *client) {
 	client_iterator it = clients.begin();
@@ -49,14 +41,14 @@ void Channel::handleClientRemoval(Client *client) {
 		}
 	}
 
-	client->setChannel(NULL);
+	client->chan = 0;
 
 	if (client == admin) {
 		if (!clients.empty()) {
 			admin = *(clients.begin());
 			admin->sendWithLineEnding(IRCResponse::RPL_MSG(admin->getPrefix(), "", name, "you are the new admin"));
 			std::string message =
-			    client->getNickname() +
+			    client->nick_name +
 			    " is now the admin of the channel " + name;
 			sending(*admin, message, "PRIVMSG");
 			std::cout << message << std::endl;
@@ -66,25 +58,12 @@ void Channel::handleClientRemoval(Client *client) {
 	}
 }
 
-void Channel::setMessage(bool flag) { message = flag; }
-bool Channel::getMerssage() const { return message; }
-void Channel::setLimit(size_t l) { limit = l; }
-void Channel::setKey(std::string k) { key = k; }
-Client *Channel::getAdmin() const { return admin; }
-
-Channel::~Channel() {}
-
 bool Channel::isInChannel(Client &client) {
 	if (std::find(clients.begin(), clients.end(), &client) == clients.end())
 		return false;
 	return true;
 }
 
-bool Channel::topicModeIsOn(void) { return topicMode; }
-
-bool Channel::isInviteOnly(void) { return inviteOnly; }
-void Channel::setInviteOnly(bool mode) { inviteOnly = mode; }
-void Channel::setTopicMode(bool mode) { topicMode = mode; }
 bool Channel::isOperator(Client &client) {
 	if (std::find(operators.begin(), operators.end(), &client) ==
 	    operators.end())
@@ -108,17 +87,13 @@ bool Channel::isAdmin(Client &client) {
 		return false;
 	return &client == admin;
 }
-void Channel::setChannelLimit(int l) { limit = l; }
-
-std::string Channel::getTopic(void) { return topic; }
-void Channel::setTopic(const std::string &t) { topic = t; }
 
 void Channel::kick(Client &client, Client &target, const std::string &reason) {
 	this->broadcast(
-	    IRCResponse::RPL_KICK(client.getPrefix(), name, target.getNickname(), reason));
+	    IRCResponse::RPL_KICK(client.getPrefix(), name, target.nick_name, reason));
 	this->removeClient(target);
-	std::string message = client.getNickname() + " kicked " +
-			      target.getNickname() + " from channel " + name;
+	std::string message = client.nick_name + " kicked " +
+			      target.nick_name + " from channel " + name;
 	std::cout << message << std::endl;
 }
 
@@ -133,11 +108,13 @@ void Channel::removeClient(Client &client) {
 
 		it_b++;
 	}
-	client.setChannel(NULL);
+
+	client.chan = 0;
+
 	if (&client == admin) {
 		admin = *(clients.begin());
 
-		std::string message = client.getNickname() +
+		std::string message = client.nick_name +
 				      " is now the admin of the channel " +
 				      name;
 		std::cout << message << std::endl;
@@ -174,6 +151,7 @@ void     Channel::broadcast(const std::string& message)
     }
 }
 
+// Buggy?
 bool Channel::channelIsFull(void)
 {
     if (limit == 0)
@@ -188,24 +166,15 @@ void Channel::replyWho(Client &client, int mode)
     {
     	// Buggy: what is "H"?
         std::string reply = IRCResponse::RPL_WHOREPLY(
-        	client.getNickname(), name,
-        	clients[i]->getUsername(), clients[i]->getHostname(),
-        	clients[i]->getNickname(), "H", clients[i]->getRealname()
+        	client.nick_name, name,
+        	clients[i]->user_name, clients[i]->host_name,
+        	clients[i]->nick_name, "H", clients[i]->real_name
         );
 
         if (!mode || this->isOperator(client))
             client.sendWithLineEnding(reply);
     }
-    client.sendWithLineEnding(IRCResponse::RPL_ENDOFWHO(client.getNickname(), name));
-}
-void Channel::add_client(Client *client) { clients.push_back(client); }
-
-
-std::vector<Client *> Channel::getClients() const{
-	return clients;
-}
-std::vector<Client *> Channel::getOperators() const{
-	return operators;
+    client.sendWithLineEnding(IRCResponse::RPL_ENDOFWHO(client.nick_name, name));
 }
 
 void Channel::sending(Client &c, const std::string &msg, const std::string &cmd)

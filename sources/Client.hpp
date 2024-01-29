@@ -8,10 +8,9 @@
 #include "State.hpp"
 #include <sstream>
 
-class Channel;
+struct Channel;
 
-class Client {
-      private:
+struct Client {
 	int fd;
 	int port;
 
@@ -20,32 +19,14 @@ class Client {
 	std::string host_name;
 	std::string real_name;
 	Channel *chan;
-      public:
+ 	client_state::ClientState status;
 	Client(int fd, int port, const std::string &hostname);
 	~Client();
-	// get
-	int getFd() const;
-	int getPort() const;
-	std::string getNickname() const;
-	std::string getUsername() const;
-	std::string getRealname() const;
-	std::string getHostname() const;
+
 	std::string getPrefix() const;
-	Channel *getChannel() const;
 
-	// set
-	client_state::ClientState status;
-	void setNickname(const std::string &nickname);
-	void setUsername(const std::string &username);
-	void setRealname(const std::string &realname);
-	void setState(client_state::ClientState state);
-	void setChannel(Channel *channel);
+	/* Send and receive */
 
-	// some mechanism to state knowing
-	bool isInRegisteredState() const;
-
-
-	/* Send/Recieve Actions */
 	void sendWithLineEnding(const std::string &message) const;
 	void respondWithPrefix(const std::string &message);
 	void sendWelcomeMessage();
@@ -57,4 +38,4 @@ class Client {
 	bool nickIsCorrect(std::string buffer);
 };
 
-#endif 
+#endif

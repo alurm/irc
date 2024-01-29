@@ -72,7 +72,7 @@ void Server::connect_client() {
 
 	char message[1000];
 	sprintf(message, "%s:%d has connected.\n",
-		client.getHostname().c_str(), client.getPort());
+		client.host_name.c_str(), client.port);
 	std::cout << message;
 }
 
@@ -81,7 +81,7 @@ void Server::disconnectClient(int fd) {
 	client.handleChannelLeave();
 	char message[1000];
 	sprintf(message, "%s:%d has disconnected!",
-		client.getHostname().c_str(), client.getPort());
+		client.host_name.c_str(), client.port);
 	std::cout << message << std::endl;
 	clients.erase(fd);
 	std::vector<pollfd>::iterator it_b = fds.begin();
@@ -200,12 +200,10 @@ void Server::start() {
 	}
 }
 
-std::string Server::getPassword() const { return pass; }
-
 Client *Server::getClient(const std::string &nickname) {
 	for (std::map<int, Client>::iterator it = clients.begin();
 	     it != clients.end(); ++it) {
-		if (nickname == it->second.getNickname()) {
+		if (nickname == it->second.nick_name) {
 			return &it->second;
 		}
 	}
@@ -215,7 +213,7 @@ Client *Server::getClient(const std::string &nickname) {
 Channel *Server::getChannel(const std::string &name) {
 	for (size_t i = 0; i < channels.size(); ++i) {
 		Channel *currentChannel = channels[i];
-		if (currentChannel && name == currentChannel->getName()) {
+		if (currentChannel && name == currentChannel->name) {
 			return currentChannel;
 		}
 	}
@@ -277,13 +275,14 @@ void Server::dispatch(Client &c, message m) {
 		return;
 	} else {
 		c.respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
-		    c.getNickname(), m.command));
+		    c.nick_name, m.command));
 		return;
 	}
 
-	if (!c.isInRegisteredState() && command->isAuthenticationRequired()) {
+	// Buggy?
+	if (c.status != client_state::REGISTERED && command->isAuthenticationRequired()) {
 		c.respondWithPrefix(
-		    IRCResponse::ERR_NOTREGISTERED(c.getNickname()));
+		    IRCResponse::ERR_NOTREGISTERED(c.nick_name));
 		if (command != NULL) {
 			delete command;
 		}
@@ -299,7 +298,7 @@ void Server::dispatch(Client &c, message m) {
 void Server::updateNicknameInClients(int fd, const std::string &newNickname) {
 	std::map<int, Client>::iterator clientIt = clients.find(fd);
 	if (clientIt != clients.end()) {
-		clientIt->second.setNickname(newNickname);
+		clientIt->second.nick_name = newNickname;
 	}
 }
 
@@ -307,21 +306,19 @@ void Server::updateNicknameInChannels(const std::string &oldNickname,
 				      const std::string &newNickname) {
 	for (size_t i = 0; i < channels.size(); ++i) {
 		std::vector<Client *> channelClients =
-		    channels[i]->getClients();
-		std::vector<Client *> channelOps = channels[i]->getOperators();
+		    channels[i]->clients;
+		std::vector<Client *> channelOps = channels[i]->operators;
 
 		for (size_t j = 0; j < channelClients.size(); ++j) {
-			if (channelClients[j]->getNickname() == oldNickname) {
-				channelClients[j]->setNickname(newNickname);
+			if (channelClients[j]->nick_name == oldNickname) {
+				channelClients[j]->nick_name = newNickname;
 			}
 		}
 
 		for (size_t j = 0; j < channelOps.size(); ++j) {
-			if (channelOps[j]->getNickname() == oldNickname) {
-				channelOps[j]->setNickname(newNickname);
+			if (channelOps[j]->nick_name == oldNickname) {
+				channelOps[j]->nick_name = newNickname;
 			}
 		}
 	}
 }
-
-std::vector<Channel *> Server::getChannels() { return channels; }

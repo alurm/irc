@@ -5,12 +5,10 @@
 #include "Client.hpp"
 #include "Parser.hpp"
 
-class Server;
-//class Client;
-//class Base2;
-//class Pass;
-//struct message;
+struct Server;
 
+// Buggy?
 int countParams(char **params);
 std::string trim(const std::string& str);
+
 #endif
