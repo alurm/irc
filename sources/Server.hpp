@@ -29,25 +29,23 @@ class Server {
 	Socket sock;
 	// Event holders.
 	std::vector<pollfd> fds;
-	std::map<int, Client *> clients;
+	std::map<int, Client> clients;
 	std::vector<Channel *> channels;
 
       public:
 	Server(const std::string &port, const std::string &pass);
-	~Server();
 	int initializeSocket();
 	void start();
 	void disconnectClient(int fd);
 	void connect_client();
 	void handle_client_message(int fd);
 	struct message get_client_message(int fd);
-	void dispatch(Client *c, message m);
+	void dispatch(Client &c, message m);
 	std::string getPassword() const;
 	Client *getClient(const std::string &nickname);
 	Channel *getChannel(const std::string &name);
 	Channel *addChannel(const std::string &name, const std::string &key,
-			    Client *client);
-	void closeFreeALL(void);
+			    Client &client);
 	void updateNicknameInClients(int fd, const std::string& newNickname);
 	void updateNicknameInChannels(const std::string& oldNickname, const std::string& newNickname);
 	std::vector<Channel *>  getChannels();

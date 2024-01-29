@@ -23,7 +23,7 @@ class Base2 {
 	explicit Base2(Server *s,  bool auth);
 	virtual ~Base2();
 	bool isAuthenticationRequired() const;
-	virtual void execute(Client *client, std::vector<std::string> args) = 0;
+	virtual void execute(Client &client, std::vector<std::string> args) = 0;
 };
 
 class Pass : public Base2 {
@@ -31,7 +31,7 @@ class Pass : public Base2 {
 	Pass(Server *server, bool auth);
 	~Pass();
 
-	void execute(Client *client, std::vector<std::string> args);
+	void execute(Client &client, std::vector<std::string> args);
 };
 
 class Join : public Base2
@@ -41,7 +41,7 @@ class Join : public Base2
         Join(Server* server,  bool auth);
         ~Join();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Nick : public Base2
@@ -51,7 +51,7 @@ class Nick : public Base2
         Nick(Server* server,  bool auth);
         ~Nick();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 
@@ -62,7 +62,7 @@ class User : public Base2
         User(Server* server,  bool auth);
         ~User();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Quit : public Base2
@@ -72,7 +72,7 @@ class Quit : public Base2
         Quit(Server* server,  bool auth);
         ~Quit();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 
@@ -83,7 +83,7 @@ class Mode : public Base2
         Mode(Server* server,  bool auth);
         ~Mode();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Topic : public Base2
@@ -93,7 +93,7 @@ class Topic : public Base2
         Topic(Server* server,  bool auth);
         ~Topic();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Ping : public Base2
@@ -103,7 +103,7 @@ class Ping : public Base2
         Ping(Server* server,  bool auth);
         ~Ping();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class PrivMsg : public Base2
@@ -113,7 +113,7 @@ class PrivMsg : public Base2
         PrivMsg(Server* server,  bool auth);
         ~PrivMsg();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Pong : public Base2
@@ -123,7 +123,7 @@ class Pong : public Base2
         Pong(Server* server,  bool auth);
         ~Pong();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Kick : public Base2
@@ -133,7 +133,7 @@ class Kick : public Base2
         Kick(Server* server,  bool auth);
         ~Kick();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Invite : public Base2
@@ -143,7 +143,7 @@ class Invite : public Base2
         Invite(Server* server,  bool auth);
         ~Invite();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Part : public Base2
@@ -153,7 +153,7 @@ class Part : public Base2
         Part(Server* server,  bool auth);
         ~Part();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 class Who : public Base2
@@ -163,7 +163,7 @@ class Who : public Base2
         Who(Server* server,  bool auth);
         ~Who();
 
-        void    execute(Client* client, std::vector<std::string> args);
+        void    execute(Client &client, std::vector<std::string> args);
 };
 
 #endif

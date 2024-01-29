@@ -34,3 +34,9 @@ Secret knowledge
 [ ] Do not leak memory.
 [ ] Memory must be freed in destructors when interfacting with C++.
 [ ] What about POLLOUT on client sockets? sources/Client.cpp:48, sources/Server.cpp:72
+[ ] Verify potentially buggy functions.
+[ ] Get rid of getX.
+
+[ ] Can there be client duplicates?
+[ ] What's the identity? Currently it is a pointer. Should be some other name?
+

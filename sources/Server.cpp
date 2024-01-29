@@ -42,11 +42,6 @@ Server::Server(const std::string &port, const std::string &pass) :
 		throw std::runtime_error("Error: Unable to set socket as non-blocking.");
 }
 
-Server::~Server() {
-	for (size_t i = 0; i < channels.size(); i++)
-		delete clients[i];
-}
-
 void Server::connect_client() {
 	sockaddr_in addr;
 
@@ -72,22 +67,21 @@ void Server::connect_client() {
 		    "Error while getting a hostname on a new client!");
 	}
 
-	Client *client =
-	    new Client(fd, ntohs(addr.sin_port), std::string(hostname));
+	Client client(fd, ntohs(addr.sin_port), std::string(hostname));
 	clients.insert(std::make_pair(fd, client));
 
 	char message[1000];
 	sprintf(message, "%s:%d has connected.\n",
-		client->getHostname().c_str(), client->getPort());
+		client.getHostname().c_str(), client.getPort());
 	std::cout << message;
 }
 
 void Server::disconnectClient(int fd) {
-	Client *client = clients.at(fd);
-	client->handleChannelLeave();
+	Client &client = clients.at(fd);
+	client.handleChannelLeave();
 	char message[1000];
 	sprintf(message, "%s:%d has disconnected!",
-		client->getHostname().c_str(), client->getPort());
+		client.getHostname().c_str(), client.getPort());
 	std::cout << message << std::endl;
 	clients.erase(fd);
 	std::vector<pollfd>::iterator it_b = fds.begin();
@@ -101,7 +95,6 @@ void Server::disconnectClient(int fd) {
 			++it_b;
 		}
 	}
-	delete client;
 }
 
 struct message Server::get_client_message(int fd) {
@@ -162,7 +155,7 @@ struct message Server::get_client_message(int fd) {
 void Server::handle_client_message(int fd) {
 	if (clients.count(fd) > 0) {
 		;
-		Client *client = clients.at(fd);
+		Client &client = clients.at(fd);
 		message message = this->get_client_message(fd);
 		std::vector<std::string> paramsVector;
 		for (int i = 0; i < message.params_count; i++) {
@@ -205,16 +198,15 @@ void Server::start() {
 		}
 		// system("leaks ircserv");
 	}
-	closeFreeALL();
 }
 
 std::string Server::getPassword() const { return pass; }
 
 Client *Server::getClient(const std::string &nickname) {
-	for (std::map<int, Client *>::iterator it = clients.begin();
+	for (std::map<int, Client>::iterator it = clients.begin();
 	     it != clients.end(); ++it) {
-		if (it->second && nickname == it->second->getNickname()) {
-			return it->second;
+		if (nickname == it->second.getNickname()) {
+			return &it->second;
 		}
 	}
 	return NULL;
@@ -231,14 +223,14 @@ Channel *Server::getChannel(const std::string &name) {
 }
 
 Channel *Server::addChannel(const std::string &name, const std::string &key,
-			    Client *client) {
+			    Client &client) {
 	Channel *channel = new Channel(name, key, client);
 	channels.push_back(channel);
 
 	return channel;
 }
 
-void Server::dispatch(Client *c, message m) {
+void Server::dispatch(Client &c, message m) {
 
 	std::vector<std::string> args;
 
@@ -284,14 +276,14 @@ void Server::dispatch(Client *c, message m) {
 	} else if (strcmp(m.command, "")) {
 		return;
 	} else {
-		c->respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
-		    c->getNickname(), m.command));
+		c.respondWithPrefix(IRCResponse::ERR_UNKNOWNCOMMAND(
+		    c.getNickname(), m.command));
 		return;
 	}
 
-	if (!c->isInRegisteredState() && command->isAuthenticationRequired()) {
-		c->respondWithPrefix(
-		    IRCResponse::ERR_NOTREGISTERED(c->getNickname()));
+	if (!c.isInRegisteredState() && command->isAuthenticationRequired()) {
+		c.respondWithPrefix(
+		    IRCResponse::ERR_NOTREGISTERED(c.getNickname()));
 		if (command != NULL) {
 			delete command;
 		}
@@ -303,23 +295,11 @@ void Server::dispatch(Client *c, message m) {
 	}
 }
 
-void Server::closeFreeALL(void) {
-	for (
-		std::map<int, Client *>::iterator it = clients.begin();
-		it != clients.end();
-		++it
-	) {
-		close(it->first);
-		if (it->second)
-			delete it->second;
-	}
-	clients.clear();
-}
-
+// Not very efficient.
 void Server::updateNicknameInClients(int fd, const std::string &newNickname) {
-	std::map<int, Client *>::iterator clientIt = clients.find(fd);
+	std::map<int, Client>::iterator clientIt = clients.find(fd);
 	if (clientIt != clients.end()) {
-		clientIt->second->setNickname(newNickname);
+		clientIt->second.setNickname(newNickname);
 	}
 }
 

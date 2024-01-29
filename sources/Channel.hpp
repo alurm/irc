@@ -32,7 +32,7 @@ class Channel {
 	size_t getLimit() const;
 	size_t getClientCount() const;
 	std::vector<std::string> getNicknames();
-	Channel(const std::string &name, const std::string &key, Client *admin);
+	Channel(const std::string &name, const std::string &key, Client &admin);
 	~Channel();
 	void handleClientRemoval(Client *client);
 	void setMessage(bool flag);
@@ -41,27 +41,27 @@ class Channel {
 	bool getMerssage() const;
 	bool topicModeIsOn(void);
 	Client *getAdmin() const;
-	bool isInChannel(Client *channel);
+	bool isInChannel(Client &channel);
 	bool isInviteOnly(void);
 	void setInviteOnly(bool mode);
 	void setTopicMode(bool mode);
-	bool isOperator(Client *client);
-	void removeOperator(Client *client);
-	void addOperator(Client *client);
+	bool isOperator(Client &client);
+	void removeOperator(Client &client);
+	void addOperator(Client &client);
 	Client *getClientByNick(std::string nickname);
-	bool isAdmin(Client *client);
+	bool isAdmin(Client &client);
 	void setChannelLimit(int l);
 	std::string getTopic(void);
 	void setTopic(const std::string &t);
-	void kick(Client *client, Client *target, const std::string &reason);
-	void removeClient(Client *client);
+	void kick(Client &client, Client &target, const std::string &reason);
+	void removeClient(Client &client);
 	void broadcast(const std::string &message, Client *exclude);
 	void broadcast(const std::string &message);
 	bool channelIsFull(void);
-	void replyWho(Client* client, int mode);
+	void replyWho(Client &client, int mode);
 	std::vector<Client *> getClients() const;
 	std::vector<Client *> getOperators() const;
-	void sending(Client* C, const std::string& msg, const std::string& cmd);
+	void sending(Client &C, const std::string& msg, const std::string& cmd);
 };
 
 #endif

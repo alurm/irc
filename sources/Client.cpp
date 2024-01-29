@@ -72,7 +72,7 @@ void Client::sendWelcomeMessage() {
 }
 
 void Client::handleChannelJoin(Channel *channel) {
-	if (!channel || channel->isInChannel(this)) {
+	if (!channel || channel->isInChannel(*this)) {
 		return;
 	}
 
@@ -129,10 +129,12 @@ void Client::handleChannelLeave() {
 }
 
 Client *Channel::getClientByNick(std::string nickname) {
-	std::vector<Client *>::iterator it = clients.begin();
-	for (; it != clients.end(); ++it)
-		if ((*it)->getNickname() == nickname)
-			return (*it);
+	for (
+		std::vector<Client *>::iterator it = clients.begin();
+		it != clients.end();
+		++it
+	)
+		if ((*it)->getNickname() == nickname) return *it;
 
 	return NULL;
 }
