@@ -81,3 +81,6 @@ void print_message(message m);
 parseme parse(lexeme l, parse_state *p);
 std::vector<parseme> parse_lexeme_string(std::vector<lexeme> lexemes,
 					 parse_state *state);
+void freeParseme(parseme p);
+void freeLexeme(lexeme l);
+void freeMessage(message& m);

@@ -167,7 +167,7 @@ parseme parse(lexeme l, parse_state *p) {
 	case lexeme::word: {
 		char *word = l.value.word;
 		if (strlen(word) == 0) {
-			free(word);
+			// free(word);
 			return (parseme){.tag = parseme::nothing};
 		}
 		assert(strlen(word) != 0);
@@ -179,17 +179,17 @@ parseme parse(lexeme l, parse_state *p) {
 			    .has_value = true,
 			    .value = without_colon,
 			};
-			free(word);
+			// free(word);
 			return (parseme){.tag = parseme::nothing};
 		} else {
 			if (p->words.size() == 0) {
 				char *new_word = strdup(word);
 				p->words.push_back(new_word);
-				free(word);
+				// free(word);
 				return (parseme){.tag = parseme::nothing};
 			} else {
 				p->words.push_back(word);
-				free(word);
+				// free(word);
 				return (parseme){.tag = parseme::nothing};
 			}
 		}
@@ -212,4 +212,47 @@ std::vector<parseme> parse_lexeme_string(std::vector<lexeme> lexemes,
 		}
 	}
 	return result;
+}
+
+void freeParseme(parseme p) {
+    if (p.tag == parseme::message) {
+        message m = p.value.message;
+        free(m.prefix);
+        free(m.command);
+        for (int i = 0; i < m.params_count; i++) {
+            free(m.params[i]);
+        }
+        free(m.params);
+    }
+}
+
+void freeLexeme(lexeme l) {
+    if (l.tag == lexeme::word) {
+        free(l.value.word);
+    }
+}
+
+void freeMessage(message& m) {
+    if (m.prefix != nullptr) {
+        free(m.prefix);
+    }
+
+    if (m.command != nullptr) {
+        free(m.command);
+    }
+
+    for (int i = 0; i < m.params_count; ++i) {
+        if (m.params[i] != nullptr) {
+            free(m.params[i]);
+        }
+    }
+
+    if (m.params != nullptr) {
+        free(m.params);
+    }
+
+    m.prefix = nullptr;
+    m.command = nullptr;
+    m.params = nullptr;
+    m.params_count = 0;
 }
