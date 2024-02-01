@@ -7,7 +7,6 @@ Channel::Channel(const std::string &name, const std::string &key, Client &admin)
 	topicMode = false;
 	admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name, "you are the new admin"));
 	operators.push_back(&admin);
-	clients.push_back(&admin);
 }
 
 std::vector<std::string> Channel::getNicknames() {
