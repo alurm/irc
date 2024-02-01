@@ -24,6 +24,8 @@ struct Client;
 struct Server {
 	const std::string port;
 	const std::string pass;
+	std::string com;
+	std::string prefix;
 	Socket sock;
 
 	// Event holders.

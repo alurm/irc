@@ -125,6 +125,7 @@ struct message Server::get_client_message(int fd) {
 		    "Error while reading buffer from a client!");
 	}
 	message.append(buffer);
+
 	// size_t pos = message.find("\r\n");
 
 	// if (pos != std::string::npos) {
@@ -150,26 +151,36 @@ struct message Server::get_client_message(int fd) {
 	std::vector<parseme> parsedMessages =
 	    parse_lexeme_string(lexemes, &parserState);
 	if (!parsedMessages.empty()) {
-		for (size_t i = 0; i < parsedMessages.size(); ++i) {
+		for (size_t i = 0; i < parsedMessages.size(); i++) {
 			if (parsedMessages[i].tag == parseme::message) {
 				m = parsedMessages[i].value.message;
 			}
 		}
 	}
+	for (std::vector<lexeme>::iterator it = lexemes.begin(); it != lexemes.end(); it++) {
+        freeLexeme(*it);
+    }
+
 	return m;
 }
 
 void Server::handle_client_message(int fd) {
+	std::cout << "in handle_client_message\n";
 	if (clients.count(fd) > 0) {
+		std::cout << "in if\n";
 		Client &client = clients.at(fd);
 		message message = this->get_client_message(fd);
+					// freeMessage(message);
 		std::vector<std::string> paramsVector;
 		for (int i = 0; i < message.params_count; i++) {
 			std::string param = std::string(message.params[i]);
 			paramsVector.push_back(param);
 		}
+
 		if (message.command) {
+			std::cout << "hasav>>>>>>>>>>>>>>>>>>\n";
 			dispatch(client, message);
+			std::cout << "hasav\n";
 		}
 	}
 }
@@ -199,7 +210,9 @@ void Server::start() {
 			}
 
 			handle_client_message(it->fd);
+			system("leaks ircserv");
 		}
+		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 		// system("leaks ircserv");
 	}
 }
@@ -242,39 +255,46 @@ void Server::dispatch(Client &c, message m) {
 		args.push_back(std::string(m.params[i]));
 		delete[] m.params[i];
 	}
-
+	if(m.prefix) {
+		prefix =  std::string(m.prefix);
+		free(m.prefix);
+	}
+	if(m.command) {
+		com = std::string(m.command);
+		free(m.command);
+	}
 	delete[] m.params;
 	m.params = NULL;
 
-	if (strcmp(m.command, "PASS") == 0) {
+	if (com =="PASS") {
 		command = new Pass(this, false);
-	} else if (strcmp(m.command, "JOIN") == 0) {
+	} else if (com == "JOIN") {
 		command = new Join(this, true);
-	} else if (strcmp(m.command, "NICK") == 0) {
+	} else if (com =="NICK") {
 		command = new Nick(this, false);
-	} else if (strcmp(m.command, "USER") == 0) {
+	} else if (com =="USER") {
 		command = new User(this, false);
-	} else if (strcmp(m.command, "QUIT") == 0) {
+	} else if (com =="QUIT") {
 		command = new Quit(this, false);
-	} else if (strcmp(m.command, "MODE") == 0) {
+	} else if (com =="MODE") {
 		command = new Mode(this, true);
-	} else if (strcmp(m.command, "TOPIC") == 0) {
+	} else if (com =="TOPIC") {
 		command = new Topic(this, true);
-	} else if (strcmp(m.command, "PING") == 0) {
+	} else if (com =="PING") {
 		command = new Ping(this, true);
-	} else if (strcmp(m.command, "PRIVMSG") == 0) {
+	} else if (com =="PRIVMSG") {
 		command = new PrivMsg(this, true);
-	} else if (strcmp(m.command, "PONG") == 0) {
+	} else if (com =="PONG") {
 		command = new Pong(this, true);
-	} else if (strcmp(m.command, "KICK") == 0) {
+	} else if (com =="KICK") {
 		command = new Kick(this, true);
-	} else if (strcmp(m.command, "INVITE") == 0) {
+	} else if (com =="INVITE") {
 		command = new Invite(this, true);
-	} else if (strcmp(m.command, "PART") == 0) {
+	} else if (com =="PART") {
 		command = new Part(this, true);
-	} else if (strcmp(m.command, "WHO") == 0) {
+	} else if (com =="WHO") {
 		command = new Who(this, true);
-	} else if (strcmp(m.command, "")) {
+	} else if (com =="") {
 		return;
 	} else {
 		c.respondWithPrefix(
@@ -287,15 +307,12 @@ void Server::dispatch(Client &c, message m) {
 	    command->isAuthenticationRequired()) {
 		c.respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c.nick_name));
-		if (command != NULL) {
-			delete command;
-		}
 		return;
 	}
 	if (command != NULL) {
 		command->execute(c, args);
-		delete command;
 	}
+	delete command;
 }
 
 // Not very efficient.
