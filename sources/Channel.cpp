@@ -7,6 +7,7 @@ Channel::Channel(const std::string &name, const std::string &key, Client &admin)
 	topicMode = false;
 	admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name, "you are the new admin"));
 	operators.push_back(&admin);
+	clients.push_back(&admin);
 }
 
 std::vector<std::string> Channel::getNicknames() {
@@ -40,17 +41,22 @@ void Channel::handleClientRemoval(Client *client) {
 			++it;
 		}
 	}
-
+	std::cout << ">>>>>>>>\n";
 	client->chan = 0;
 
 	if (client == admin) {
+		std::cout << "1111\n"; 
 		if (!clients.empty()) {
-			admin = *(clients.begin());
+			std::cout << "2222\n";
+			admin = clients[0];
+			std::cout << "33333\n";
 			admin->sendWithLineEnding(IRCResponse::RPL_MSG(admin->getPrefix(), "", name, "you are the new admin"));
+			std::cout << "44444\n";
 			std::string message =
 			    client->nick_name +
 			    " is now the admin of the channel " + name;
 			sending(*admin, message, "PRIVMSG");
+			std::cout << "55555\n";
 			std::cout << message << std::endl;
 		} else {
 			admin = NULL;

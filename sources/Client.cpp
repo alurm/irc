@@ -56,7 +56,6 @@ void Client::handleChannelJoin(Channel *channel) {
 	if (!channel || channel->isInChannel(*this)) {
 		return;
 	}
-
 	channel->clients.push_back(this);
 	chan = channel;
 
