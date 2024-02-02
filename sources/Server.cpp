@@ -115,56 +115,60 @@ struct message Server::get_client_message(int fd) {
 	m.command = NULL;
 	m.params = NULL;
 	m.params_count = 0;
-	std::string message;
-	char buffer[1024];
-	int bytesRead;
+	std::string receivedData;
 
-	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+	while(true) {
+		char buffer[1024];
+		int bytesRead;
 
-	if (bytesRead < 0 && errno != EWOULDBLOCK) {
-		std::cout << "Error occurred during recv: " << strerror(errno)
-			  << std::endl;
-		throw std::runtime_error(
-		    "Error while reading buffer from a client!");
-	}
-	message.append(buffer);
+		bytesRead = recv(fd, buffer, sizeof(buffer), 0);
 
-	// size_t pos = message.find("\r\n");
+		if (bytesRead < 0 && errno != EWOULDBLOCK) {
+			std::cout << "Error occurred during recv: " << strerror(errno)
+				<< std::endl;
+			throw std::runtime_error(
+				"Error while reading buffer from a client!");
+		}
 
-	// if (pos != std::string::npos) {
-	// 	message.replace(message.rfind("\r\n"), 2, "\r\n\r\n");
-	// }
+		if (bytesRead > 0) {
+			receivedData.append(buffer);
+			size_t pos = receivedData.find("\r\n");
+			if (pos != std::string::npos) {
+				std::string completeMessage = receivedData.substr(0, pos+2);
+                receivedData.erase(0, pos + 2);
+				std::stringstream ss(completeMessage);
+				std::string syntax;
 
-	std::stringstream ss(message);
-	std::string syntax;
-
-	std::string trimmedMessage = trim(message);
-	lex_state lexerState = {
-	    .state = lex_state::in_word,
-	    .word = "",
-	    .in_trailing = false,
-	};
-	std::vector<lexeme> lexemes = lex_string(message.c_str(), &lexerState);
-	parse_state parserState = {
-	    .prefix =
-		{
-		    .has_value = false,
-		},
-	};
-	std::vector<parseme> parsedMessages =
-	    parse_lexeme_string(lexemes, &parserState);
-	if (!parsedMessages.empty()) {
-		for (size_t i = 0; i < parsedMessages.size(); i++) {
-			if (parsedMessages[i].tag == parseme::message) {
-				m = parsedMessages[i].value.message;
+				std::string trimmedMessage = trim(completeMessage);
+				lex_state lexerState = {
+					.state = lex_state::in_word,
+					.word = "",
+					.in_trailing = false,
+				};
+				std::vector<lexeme> lexemes = lex_string(trimmedMessage.c_str(), &lexerState);
+				parse_state parserState = {
+					.prefix =
+					{
+						.has_value = false,
+					},
+				};
+				std::vector<parseme> parsedMessages =
+					parse_lexeme_string(lexemes, &parserState);
+				if (!parsedMessages.empty()) {
+					for (size_t i = 0; i < parsedMessages.size(); i++) {
+						if (parsedMessages[i].tag == parseme::message) {
+							m = parsedMessages[i].value.message;
+						}
+					}
+				}
+				for (std::vector<lexeme>::iterator it = lexemes.begin(); it != lexemes.end(); it++) {
+					freeLexeme(*it);
+				}
+				std::cout << "trimmedMessage is " << trimmedMessage << std::endl;
+				return m;
 			}
 		}
 	}
-	for (std::vector<lexeme>::iterator it = lexemes.begin(); it != lexemes.end(); it++) {
-        freeLexeme(*it);
-    }
-
-	return m;
 }
 
 void Server::handle_client_message(int fd) {
@@ -210,11 +214,11 @@ void Server::start() {
 				if (it->fd == sock.value) {
 					connect_client();
 					break;
-				}
+				}else {
+                    handle_client_message(it->fd);
+                }
 			}
-
-			handle_client_message(it->fd);
-			system("leaks ircserv");
+			// system("leaks ircserv");
 		}
 		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 		// system("leaks ircserv");
