@@ -84,12 +84,9 @@ void Server::connect_client() {
 }
 
 void Server::disconnectClient(int fd) {
-	std::cout << "In disconnectClient \n";
 	std::map<int, Client>::iterator client = clients.find(fd);
 	if (client != clients.end()) {
-		std::cout << "Client is exist yet \n";
 		client->second.handleChannelLeave();
-		std::cout << "after handleChannelLeave\n";
 		char message[1000];
 		sprintf(message, "%s:%d has disconnected!",
 			client->second.host_name.c_str(), client->second.port);
@@ -201,7 +198,6 @@ void Server::start() {
 		for (std::vector<pollfd>::iterator it = fds.begin();
 		     it != fds.end(); ++it) {
 			if (it->revents & POLLHUP) {
-				std::cout << "in POLLHUP \n";
 				disconnectClient(it->fd);
 				break;
 			}
