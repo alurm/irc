@@ -40,11 +40,12 @@ void Channel::handleClientRemoval(Client *client) {
 			++it;
 		}
 	}
-	std::cout << ">>>>>>>>\n";
-	client->chan = 0;
-
+ 	std::cout << ">>>>>>>> Client removed\n";
+if (client) {
+        client->chan = 0;
 	if (client == admin) {
-		std::cout << "1111\n"; 
+		client->chan = 0;
+		std::cout << "1111\n";
 		if (!clients.empty()) {
 			std::cout << "2222\n";
 			admin = clients[0];
@@ -61,6 +62,7 @@ void Channel::handleClientRemoval(Client *client) {
 			admin = NULL;
 		}
 	}
+}
 }
 
 bool Channel::isInChannel(Client &client) {
