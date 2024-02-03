@@ -133,15 +133,27 @@ struct message Server::get_client_message(int fd) {
 
 		if (bytesRead > 0) {
 			receivedData.append(buffer, bytesRead);
-			size_t pos = receivedData.find("\r\n");
+			size_t pos = receivedData.find("\n");
 			if (pos != std::string::npos) {
 				std::string completeMessage =
-				    receivedData.substr(0, pos + 2);
-				receivedData.erase(0, pos + 2);
+				    receivedData.substr(0, pos + 1);
+				receivedData.erase(0, pos + 1);
 				std::stringstream ss(completeMessage);
 				std::string syntax;
 				std::string trimmedMessage =
 				    trim(completeMessage);
+				if (!endsWithCRLF(trimmedMessage)) {
+					// trimmedMessage += "\r\n";
+					size_t pos = trimmedMessage.find('\n');
+
+					while (pos != std::string::npos) {
+						trimmedMessage.replace(pos, 1,
+								       "\r\n");
+						pos = trimmedMessage.find(
+						    '\n',
+						    pos + 2);
+					}
+				}
 				lex_state lexerState = {
 				    .state = lex_state::in_word,
 				    .word = "",

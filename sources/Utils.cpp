@@ -21,3 +21,13 @@ std::string trim(const std::string& str) {
     }
     return str.substr(first, (last - first + 1));
 }
+
+
+bool endsWithCRLF(const std::string& str) {
+    size_t length = str.length();
+    if (length >= 2) {
+        std::string lastTwoChars = str.substr(length - 2);
+        return (lastTwoChars == "\r\n" || lastTwoChars == "\n");
+    }
+    return false;
+}
