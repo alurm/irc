@@ -10,7 +10,7 @@ class IRCResponse {
 		return "451 " + str + " :You have not registered";
 	}
 	static std::string ERR_ALREADYREGISTERED(const std::string &str) {
-		return "462 " + str + " :You may not register";
+		return "462 " + str + " :You may not reregister";
 	}
 	static std::string ERR_PASSWDMISMATCH(const std::string &str) {
 		return str + " :Password is incorrect";
