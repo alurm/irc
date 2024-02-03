@@ -5,7 +5,7 @@ Channel::Channel(const std::string &name, const std::string &key, Client &admin)
 	topic = "";
 	inviteOnly = false;
 	topicMode = false;
-	admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name, "you are the new admin"));
+	admin.sendWithLineEnding(IRCResponse::RPL_MSG(admin.getPrefix(), "", name + static_cast<char>(1), "you are the new admin"));
 	operators.push_back(&admin);
 }
 

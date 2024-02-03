@@ -675,3 +675,12 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 	client.sendWithLineEnding(
 	    IRCResponse::RPL_ENDOFWHO(client.nick_name, args[0]));
 }
+
+Cap::Cap(Server *server, bool auth) : Base2(server, auth) {}
+
+Cap::~Cap() {}
+
+void Cap::execute(Client &client, std::vector<std::string> args) {
+	(void) client;
+	(void) args;
+}

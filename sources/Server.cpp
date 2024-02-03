@@ -289,7 +289,7 @@ void Server::dispatch(Client &c, message m) {
 	}
 	delete[] m.params;
 	m.params = NULL;
-
+	std::cout << "command is " << com << std::endl;
 	if (com == "PASS") {
 		command = new Pass(this, false);
 	} else if (com == "JOIN") {
@@ -318,6 +318,8 @@ void Server::dispatch(Client &c, message m) {
 		command = new Part(this, true);
 	} else if (com == "WHO") {
 		command = new Who(this, true);
+	} else if (com == "CAP") {
+		command = new Cap(this, false);
 	} else if (com == "") {
 		return;
 	} else {

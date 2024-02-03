@@ -167,4 +167,14 @@ class Who : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
+class Cap : public Base2
+{
+    public:
+
+        Cap(Server* server,  bool auth);
+        ~Cap();
+
+        void    execute(Client &client, std::vector<std::string> args);
+};
+
 #endif
