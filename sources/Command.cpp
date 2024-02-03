@@ -669,9 +669,9 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 	}
 
 	client.sendWithLineEnding(IRCResponse::RPL_WHOREPLY(
-	    client.nick_name, "*", client.user_name,
-	    client.host_name, client.nick_name, "H",
-	    client.real_name));
+	    client.nick_name, "*", cli->user_name,
+	    cli->host_name, cli->nick_name, "H",
+	    cli->real_name));
 	client.sendWithLineEnding(
 	    IRCResponse::RPL_ENDOFWHO(client.nick_name, args[0]));
 }
