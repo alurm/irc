@@ -451,20 +451,6 @@ void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 				return;
 			}
 			channel->sending(client, message, "PRIVMSG");
-			// if (message == "BOT" || (message.find(' ') !=
-			// std::string::npos
-			//     && message.substr(0, message.find(' ')) ==
-			//     "BOT"))
-			// {
-			//     _bot->Fetch(message);
-			//     channel->sendingForBot(C, message, "PRIVMSG");
-			//     DEBUGGER();
-			// }
-			// else
-			// {
-			//     channel->sending(C, message, "PRIVMSG");
-			//     DEBUGGER();
-			// }
 		} else {
 			Client *cli = server->getClient(targets[i]);
 			if (!cli) {
@@ -474,7 +460,7 @@ void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 				return;
 			}
 
-			client.sendWithLineEnding(
+			cli->sendWithLineEnding(
 			    IRCResponse::RPL_MSG(client.getPrefix(), "PRIVMSG",
 						 targets[i], message));
 		}
