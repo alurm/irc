@@ -84,12 +84,9 @@ void Server::connect_client() {
 }
 
 void Server::disconnectClient(int fd) {
-	std::cout << "In disconnectClient \n";
 	std::map<int, Client>::iterator client = clients.find(fd);
 	if (client != clients.end()) {
-		std::cout << "Client is exist yet \n";
 		client->second.handleChannelLeave();
-		std::cout << "after handleChannelLeave\n";
 		char message[1000];
 		sprintf(message, "%s:%d has disconnected!",
 			client->second.host_name.c_str(), client->second.port);
@@ -110,7 +107,6 @@ void Server::disconnectClient(int fd) {
 }
 
 struct message Server::get_client_message(int fd) {
-	std::cout << "in get_client_message\n";
 	struct message m;
 	m.prefix = NULL;
 	m.command = NULL;
@@ -118,60 +114,66 @@ struct message Server::get_client_message(int fd) {
 	m.params_count = 0;
 	std::string receivedData;
 
-	while(true) {
+	while (true) {
 		char buffer[1024];
 		int bytesRead;
 
 		bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-		std::cout << "bytesRead is " << bytesRead << std::endl;
 		if (bytesRead < 0 && errno != EWOULDBLOCK) {
-			std::cout << "Error occurred during recv: " << strerror(errno)
-				<< std::endl;
+			std::cout
+			    << "Error occurred during recv: " << strerror(errno)
+			    << std::endl;
 			throw std::runtime_error(
-				"Error while reading buffer from a client!");
+			    "Error while reading buffer from a client!");
+		} else if (bytesRead == 0) {
+			disconnectClient(fd);
+			throw std::runtime_error(
+			    "Connection closed by the client");
 		}
 
 		if (bytesRead > 0) {
 			receivedData.append(buffer, bytesRead);
 			size_t pos = receivedData.find("\r\n");
 			if (pos != std::string::npos) {
-				std::cout << "crlf founded\n";
-				std::string completeMessage = receivedData.substr(0, pos + 2);
-				std::cout << "after substr\n";
-                receivedData.erase(0, pos + 2);
-				std::cout << "after erase\n";
+				std::string completeMessage =
+				    receivedData.substr(0, pos + 2);
+				receivedData.erase(0, pos + 2);
 				std::stringstream ss(completeMessage);
 				std::string syntax;
-				std::cout << "before trim\n";
-				std::string trimmedMessage = trim(completeMessage);
-				std::cout << "after trim\n";
+				std::string trimmedMessage =
+				    trim(completeMessage);
 				lex_state lexerState = {
-					.state = lex_state::in_word,
-					.word = "",
-					.in_trailing = false,
+				    .state = lex_state::in_word,
+				    .word = "",
+				    .in_trailing = false,
 				};
-				std::cout << "before lex\n";
-				std::vector<lexeme> lexemes = lex_string(trimmedMessage.c_str(), &lexerState);
-				std::cout << "after lex\n";
+				std::vector<lexeme> lexemes = lex_string(
+				    trimmedMessage.c_str(), &lexerState);
 				parse_state parserState = {
-					.prefix =
+				    .prefix =
 					{
-						.has_value = false,
+					    .has_value = false,
 					},
 				};
 				std::vector<parseme> parsedMessages =
-					parse_lexeme_string(lexemes, &parserState);
+				    parse_lexeme_string(lexemes, &parserState);
 				if (!parsedMessages.empty()) {
-					for (size_t i = 0; i < parsedMessages.size(); i++) {
-						if (parsedMessages[i].tag == parseme::message) {
-							m = parsedMessages[i].value.message;
+					for (size_t i = 0;
+					     i < parsedMessages.size(); i++) {
+						if (parsedMessages[i].tag ==
+						    parseme::message) {
+							m = parsedMessages[i]
+								.value.message;
 						}
 					}
 				}
-				for (std::vector<lexeme>::iterator it = lexemes.begin(); it != lexemes.end(); it++) {
+				for (std::vector<lexeme>::iterator it =
+					 lexemes.begin();
+				     it != lexemes.end(); it++) {
 					freeLexeme(*it);
 				}
-				std::cout << "trimmedMessage is " << trimmedMessage << std::endl;
+				// std::cout << "trimmedMessage is "
+				// 	  << trimmedMessage << std::endl;
 				return m;
 			}
 		}
@@ -179,26 +181,17 @@ struct message Server::get_client_message(int fd) {
 }
 
 void Server::handle_client_message(int fd) {
-	std::cout << "in handle_client_message\n";
 	if (clients.count(fd) > 0) {
-		std::cout << "in if\n";
 		Client &client = clients.at(fd);
 		message message = this->get_client_message(fd);
-					// freeMessage(message);
 		std::vector<std::string> paramsVector;
-		std::cout << "in if 1\n"; 
 		for (int i = 0; i < message.params_count; i++) {
-			std::cout << "in if for\n"; 
 			std::string param = std::string(message.params[i]);
 			paramsVector.push_back(param);
 		}
-		std::cout << "in if 2\n"; 
 		if (message.command) {
-			std::cout << "hasav>>>>>>>>>>>>>>>>>>\n";
 			dispatch(client, message);
-			std::cout << "hasav\n";
 		}
-		std::cout << "in if 3\n"; 
 	}
 }
 
@@ -215,7 +208,6 @@ void Server::start() {
 		for (std::vector<pollfd>::iterator it = fds.begin();
 		     it != fds.end(); ++it) {
 			if (it->revents & POLLHUP) {
-				std::cout << "in POLLHUP \n";
 				disconnectClient(it->fd);
 				break;
 			}
@@ -224,11 +216,11 @@ void Server::start() {
 				if (it->fd == sock.value) {
 					connect_client();
 					break;
-				}else {
-                    handle_client_message(it->fd);
-                }
+				} else {
+					handle_client_message(it->fd);
+				}
 			}
-			// system("leaks ircserv");
+			system("leaks ircserv");
 		}
 		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 		// system("leaks ircserv");
@@ -273,46 +265,46 @@ void Server::dispatch(Client &c, message m) {
 		args.push_back(std::string(m.params[i]));
 		delete[] m.params[i];
 	}
-	if(m.prefix) {
-		prefix =  std::string(m.prefix);
+	if (m.prefix) {
+		prefix = std::string(m.prefix);
 		free(m.prefix);
 	}
-	if(m.command) {
+	if (m.command) {
 		com = std::string(m.command);
 		free(m.command);
 	}
 	delete[] m.params;
 	m.params = NULL;
 
-	if (com =="PASS") {
+	if (com == "PASS") {
 		command = new Pass(this, false);
 	} else if (com == "JOIN") {
 		command = new Join(this, true);
-	} else if (com =="NICK") {
+	} else if (com == "NICK") {
 		command = new Nick(this, false);
-	} else if (com =="USER") {
+	} else if (com == "USER") {
 		command = new User(this, false);
-	} else if (com =="QUIT") {
+	} else if (com == "QUIT") {
 		command = new Quit(this, false);
-	} else if (com =="MODE") {
+	} else if (com == "MODE") {
 		command = new Mode(this, true);
-	} else if (com =="TOPIC") {
+	} else if (com == "TOPIC") {
 		command = new Topic(this, true);
-	} else if (com =="PING") {
+	} else if (com == "PING") {
 		command = new Ping(this, true);
-	} else if (com =="PRIVMSG") {
+	} else if (com == "PRIVMSG") {
 		command = new PrivMsg(this, true);
-	} else if (com =="PONG") {
+	} else if (com == "PONG") {
 		command = new Pong(this, true);
-	} else if (com =="KICK") {
+	} else if (com == "KICK") {
 		command = new Kick(this, true);
-	} else if (com =="INVITE") {
+	} else if (com == "INVITE") {
 		command = new Invite(this, true);
-	} else if (com =="PART") {
+	} else if (com == "PART") {
 		command = new Part(this, true);
-	} else if (com =="WHO") {
+	} else if (com == "WHO") {
 		command = new Who(this, true);
-	} else if (com =="") {
+	} else if (com == "") {
 		return;
 	} else {
 		c.respondWithPrefix(
