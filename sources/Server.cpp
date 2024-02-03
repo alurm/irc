@@ -220,12 +220,14 @@ void Server::start() {
 		for (std::vector<pollfd>::iterator it = fds.begin();
 		     it != fds.end(); ++it) {
 			if (it->revents & POLLHUP) {
+				system("leaks ircserv");
 				disconnectClient(it->fd);
 				break;
 			}
 
 			if (it->revents & POLLIN) {
 				if (it->fd == sock.value) {
+					system("leaks ircserv");
 					connect_client();
 					break;
 				} else {
