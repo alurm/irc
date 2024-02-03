@@ -110,6 +110,7 @@ void Server::disconnectClient(int fd) {
 }
 
 struct message Server::get_client_message(int fd) {
+	std::cout << "in get_client_message\n";
 	struct message m;
 	m.prefix = NULL;
 	m.command = NULL;
@@ -122,7 +123,7 @@ struct message Server::get_client_message(int fd) {
 		int bytesRead;
 
 		bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-
+		std::cout << "bytesRead is " << bytesRead << std::endl;
 		if (bytesRead < 0 && errno != EWOULDBLOCK) {
 			std::cout << "Error occurred during recv: " << strerror(errno)
 				<< std::endl;
@@ -131,21 +132,27 @@ struct message Server::get_client_message(int fd) {
 		}
 
 		if (bytesRead > 0) {
-			receivedData.append(buffer);
+			receivedData.append(buffer, bytesRead);
 			size_t pos = receivedData.find("\r\n");
 			if (pos != std::string::npos) {
-				std::string completeMessage = receivedData.substr(0, pos+2);
+				std::cout << "crlf founded\n";
+				std::string completeMessage = receivedData.substr(0, pos + 2);
+				std::cout << "after substr\n";
                 receivedData.erase(0, pos + 2);
+				std::cout << "after erase\n";
 				std::stringstream ss(completeMessage);
 				std::string syntax;
-
+				std::cout << "before trim\n";
 				std::string trimmedMessage = trim(completeMessage);
+				std::cout << "after trim\n";
 				lex_state lexerState = {
 					.state = lex_state::in_word,
 					.word = "",
 					.in_trailing = false,
 				};
+				std::cout << "before lex\n";
 				std::vector<lexeme> lexemes = lex_string(trimmedMessage.c_str(), &lexerState);
+				std::cout << "after lex\n";
 				parse_state parserState = {
 					.prefix =
 					{
@@ -179,16 +186,19 @@ void Server::handle_client_message(int fd) {
 		message message = this->get_client_message(fd);
 					// freeMessage(message);
 		std::vector<std::string> paramsVector;
+		std::cout << "in if 1\n"; 
 		for (int i = 0; i < message.params_count; i++) {
+			std::cout << "in if for\n"; 
 			std::string param = std::string(message.params[i]);
 			paramsVector.push_back(param);
 		}
-
+		std::cout << "in if 2\n"; 
 		if (message.command) {
 			std::cout << "hasav>>>>>>>>>>>>>>>>>>\n";
 			dispatch(client, message);
 			std::cout << "hasav\n";
 		}
+		std::cout << "in if 3\n"; 
 	}
 }
 
