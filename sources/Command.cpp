@@ -116,6 +116,7 @@ void Nick::execute(Client &client, std::vector<std::string> args) {
 	server->updateNicknameInClients(client.fd, nickname);
 	server->updateNicknameInChannels(oldNickname, nickname);
 	client.nick_name = nickname;
+	client.sendWithLineEnding(":" + oldNickname + " NICK " + nickname);
 	client.sendWelcomeMessage();
 }
 
