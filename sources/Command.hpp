@@ -12,7 +12,7 @@ struct Client;
 struct Server;
 
 // Buggy?
-class Base2 {
+class Command {
       protected:
 	Server *server;
 	bool is_auth;
@@ -21,13 +21,13 @@ class Base2 {
 	// Base2(const Base2& src);
 
       public:
-	explicit Base2(Server *s,  bool auth);
-	virtual ~Base2();
+	explicit Command(Server *s,  bool auth);
+	virtual ~Command();
 	bool isAuthenticationRequired() const;
 	virtual void execute(Client &client, std::vector<std::string> args) = 0;
 };
 
-class Pass : public Base2 {
+class Pass : public Command {
       public:
 	Pass(Server *server, bool auth);
 	~Pass();
@@ -35,7 +35,7 @@ class Pass : public Base2 {
 	void execute(Client &client, std::vector<std::string> args);
 };
 
-class Join : public Base2
+class Join : public Command
 {
     public:
 
@@ -45,7 +45,7 @@ class Join : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Nick : public Base2
+class Nick : public Command
 {
     public:
 
@@ -56,7 +56,7 @@ class Nick : public Base2
 };
 
 
-class User : public Base2
+class User : public Command
 {
     public:
 
@@ -66,7 +66,7 @@ class User : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Quit : public Base2
+class Quit : public Command
 {
     public:
 
@@ -77,7 +77,7 @@ class Quit : public Base2
 };
 
 
-class Mode : public Base2
+class Mode : public Command
 {
     public:
 
@@ -87,7 +87,7 @@ class Mode : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Topic : public Base2
+class Topic : public Command
 {
     public:
 
@@ -97,7 +97,7 @@ class Topic : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Ping : public Base2
+class Ping : public Command
 {
     public:
 
@@ -107,7 +107,7 @@ class Ping : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class PrivMsg : public Base2
+class PrivMsg : public Command
 {
     public:
 
@@ -117,7 +117,7 @@ class PrivMsg : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Pong : public Base2
+class Pong : public Command
 {
     public:
 
@@ -127,7 +127,7 @@ class Pong : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Kick : public Base2
+class Kick : public Command
 {
     public:
 
@@ -137,7 +137,7 @@ class Kick : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Invite : public Base2
+class Invite : public Command
 {
     public:
 
@@ -147,7 +147,7 @@ class Invite : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Part : public Base2
+class Part : public Command
 {
     public:
 
@@ -157,7 +157,7 @@ class Part : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Who : public Base2
+class Who : public Command
 {
     public:
 
@@ -167,7 +167,7 @@ class Who : public Base2
         void    execute(Client &client, std::vector<std::string> args);
 };
 
-class Cap : public Base2
+class Cap : public Command
 {
     public:
 

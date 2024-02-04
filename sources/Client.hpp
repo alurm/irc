@@ -7,6 +7,7 @@
 #include "IRCResponse.hpp"
 #include "State.hpp"
 #include <sstream>
+#include "Parser.hpp"
 
 struct Channel;
 

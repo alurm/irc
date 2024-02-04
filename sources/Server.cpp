@@ -111,101 +111,91 @@ void Server::disconnectClient(int fd) {
 }
 
 struct message Server::get_client_message(int fd) {
+	(void)fd;
 	struct message m;
-	m.prefix = NULL;
-	m.command = NULL;
-	m.params = NULL;
-	m.params_count = 0;
-	std::string receivedData;
+	assert(0);
+	// std::string receivedData;
 
-	while (true) {
-		char buffer[1024];
-		int bytesRead;
+	// while (true) {
+	// 	char buffer[1024];
+	// 	int bytesRead;
 
-		bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-		if (bytesRead < 0 && errno != EWOULDBLOCK) {
-			std::cout
-			    << "Error occurred during recv: " << strerror(errno)
-			    << std::endl;
-			throw std::runtime_error(
-			    "Error while reading buffer from a client!");
-		} else if (bytesRead == 0) {
-			disconnectClient(fd);
-			throw std::runtime_error(
-			    "Connection closed by the client");
-		}
+	// 	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
+	// 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
+	// 		std::cout
+	// 		    << "Error occurred during recv: " << strerror(errno)
+	// 		    << std::endl;
+	// 		throw std::runtime_error(
+	// 		    "Error while reading buffer from a client!");
+	// 	} else if (bytesRead == 0) {
+	// 		disconnectClient(fd);
+	// 		throw std::runtime_error(
+	// 		    "Connection closed by the client");
+	// 	}
 
-		if (bytesRead > 0) {
-			receivedData.append(buffer, bytesRead);
-			size_t pos = receivedData.find("\n");
-			if (pos != std::string::npos) {
-				std::string completeMessage =
-				    receivedData.substr(0, pos + 1);
-				receivedData.erase(0, pos + 1);
-				std::stringstream ss(completeMessage);
-				std::string syntax;
-				std::string trimmedMessage =
-				    trim(completeMessage);
-				if (!endsWithCRLF(trimmedMessage)) {
-					// trimmedMessage += "\r\n";
-					size_t pos = trimmedMessage.find('\n');
+	// 	if (bytesRead > 0) {
+	// 		receivedData.append(buffer, bytesRead);
+	// 		size_t pos = receivedData.find("\n");
+	// 		if (pos != std::string::npos) {
+	// 			std::string completeMessage =
+	// 			    receivedData.substr(0, pos + 1);
+	// 			receivedData.erase(0, pos + 1);
+	// 			std::stringstream ss(completeMessage);
+	// 			std::string syntax;
+	// 			std::string trimmedMessage =
+	// 			    trim(completeMessage);
+	// 			if (!endsWithCRLF(trimmedMessage)) {
+	// 				// trimmedMessage += "\r\n";
+	// 				size_t pos = trimmedMessage.find('\n');
 
-					while (pos != std::string::npos) {
-						trimmedMessage.replace(pos, 1,
-								       "\r\n");
-						pos = trimmedMessage.find(
-						    '\n', pos + 2);
-					}
-				}
-				lex_state lexerState = {
-				    .state = lex_state::in_word,
-				    .word = "",
-				    .in_trailing = false,
-				};
-				std::vector<lexeme> lexemes = lex_string(
-				    trimmedMessage.c_str(), &lexerState);
-				parse_state parserState = {
-				    .prefix =
-					{
-					    .has_value = false,
-					},
-				};
-				std::vector<parseme> parsedMessages =
-				    parse_lexeme_string(lexemes, &parserState);
-				if (!parsedMessages.empty()) {
-					for (size_t i = 0;
-					     i < parsedMessages.size(); i++) {
-						if (parsedMessages[i].tag ==
-						    parseme::message) {
-							m = parsedMessages[i]
-								.value.message;
-						}
-					}
-				}
-				for (std::vector<lexeme>::iterator it =
-					 lexemes.begin();
-				     it != lexemes.end(); it++) {
-					freeLexeme(*it);
-				}
-				// std::cout << "trimmedMessage is "
-				// 	  << trimmedMessage << std::endl;
-				return m;
-			}
-		}
-	}
+	// 				while (pos != std::string::npos) {
+	// 					trimmedMessage.replace(pos, 1,
+	// 							       "\r\n");
+	// 					pos = trimmedMessage.find(
+	// 					    '\n', pos + 2);
+	// 				}
+	// 			}
+	// 			lex_state lexerState = {
+	// 			    .state = lex_state::in_word,
+	// 			    .word = "",
+	// 			    .in_trailing = false,
+	// 			};
+	// 			std::vector<lexeme> lexemes = lex_string(
+	// 			    trimmedMessage.c_str(), &lexerState);
+	// 			parse_state parserState = {
+	// 			    .prefix = optional<std::string>(),
+	// 			};
+	// 			std::vector<parseme> parsedMessages =
+	// 			    parse_lexeme_string(lexemes, &parserState);
+	// 			if (!parsedMessages.empty()) {
+	// 				for (size_t i = 0;
+	// 				     i < parsedMessages.size(); i++) {
+	// 					if (parsedMessages[i].tag ==
+	// 					    parseme::message) {
+	// 						m = parsedMessages[i]
+	// 							.value.message;
+	// 					}
+	// 				}
+	// 			}
+	// 			for (std::vector<lexeme>::iterator it =
+	// 				 lexemes.begin();
+	// 			     it != lexemes.end(); it++) {
+	// 			}
+	// 			// std::cout << "trimmedMessage is "
+	// 			// 	  << trimmedMessage << std::endl;
+	// 			return m;
+	// 		}
+	// 	}
+	// }
 }
 
 void Server::handle_client_message(int fd) {
 	if (clients.count(fd) > 0) {
 		Client &client = clients.at(fd);
-		message message = this->get_client_message(fd);
-		std::vector<std::string> paramsVector;
-		for (int i = 0; i < message.params_count; i++) {
-			std::string param = std::string(message.params[i]);
-			paramsVector.push_back(param);
-		}
-		if (message.command) {
-			dispatch(client, message);
+		optional<message> optional_message = this->get_client_message(fd);
+
+		if (optional_message.has_value) {
+			dispatch(client, optional_message());
 		}
 	}
 }
@@ -214,6 +204,7 @@ void Server::start() {
 	// Be notified about incoming connections.
 	fds.push_back((pollfd){.fd = sock.value, .events = POLLIN});
 
+	// Retrying is not very efficient.
 	while (true) {
 		// Timeout is -1 to wait for the first event indefinitely.
 		if (poll(fds.data(), fds.size(), -1) < 0)
@@ -245,6 +236,14 @@ void Server::start() {
 							    it->fd);
 						}
 					}
+
+					// if (it->revents & POLLOUT) {
+					// 	it->revents &= ~POLLOUT;
+						
+					// 	// ...
+					// 	assert(0);
+					// }
+
 					// system("leaks ircserv");
 					// std::cout <<
 					// ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
@@ -286,56 +285,40 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 
 void Server::dispatch(Client &c, message m) {
 
-	std::vector<std::string> args;
+	Command *command = NULL;
 
-	Base2 *command = NULL;
-
-	for (int i = 0; i < m.params_count; ++i) {
-		args.push_back(std::string(m.params[i]));
-		delete[] m.params[i];
-	}
-	if (m.prefix) {
-		prefix = std::string(m.prefix);
-		free(m.prefix);
-	}
-	if (m.command) {
-		com = std::string(m.command);
-		free(m.command);
-	}
-	delete[] m.params;
-	m.params = NULL;
-	std::cout << "command is " << com << std::endl;
-	if (com == "PASS") {
+	std::cout << "Command is " << m.command << std::endl;
+	if (m.command == "PASS") {
 		command = new Pass(this, false);
-	} else if (com == "JOIN") {
+	} else if (m.command == "JOIN") {
 		command = new Join(this, true);
-	} else if (com == "NICK") {
+	} else if (m.command == "NICK") {
 		command = new Nick(this, false);
-	} else if (com == "USER") {
+	} else if (m.command == "USER") {
 		command = new User(this, false);
-	} else if (com == "QUIT") {
+	} else if (m.command == "QUIT") {
 		command = new Quit(this, false);
-	} else if (com == "MODE") {
+	} else if (m.command == "MODE") {
 		command = new Mode(this, true);
-	} else if (com == "TOPIC") {
+	} else if (m.command == "TOPIC") {
 		command = new Topic(this, true);
-	} else if (com == "PING") {
+	} else if (m.command == "PING") {
 		command = new Ping(this, true);
-	} else if (com == "PRIVMSG") {
+	} else if (m.command == "PRIVMSG") {
 		command = new PrivMsg(this, true);
-	} else if (com == "PONG") {
+	} else if (m.command == "PONG") {
 		command = new Pong(this, true);
-	} else if (com == "KICK") {
+	} else if (m.command == "KICK") {
 		command = new Kick(this, true);
-	} else if (com == "INVITE") {
+	} else if (m.command == "INVITE") {
 		command = new Invite(this, true);
-	} else if (com == "PART") {
+	} else if (m.command == "PART") {
 		command = new Part(this, true);
-	} else if (com == "WHO") {
+	} else if (m.command == "WHO") {
 		command = new Who(this, true);
-	} else if (com == "CAP") {
+	} else if (m.command == "CAP") {
 		command = new Cap(this, false);
-	} else if (com == "") {
+	} else if (m.command == "") {
 		return;
 	} else {
 		c.respondWithPrefix(
@@ -351,7 +334,7 @@ void Server::dispatch(Client &c, message m) {
 		return;
 	}
 	if (command != NULL) {
-		command->execute(c, args);
+		command->execute(c, m.params);
 	}
 	delete command;
 }

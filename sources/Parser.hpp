@@ -6,6 +6,29 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <stdexcept>
+
+template <class t> class optional {
+	t value;
+
+public:
+
+	bool has_value;
+
+	optional(t v) {
+		has_value = true;
+		value = v;
+	}
+
+	optional() {
+		has_value = false;
+	}
+
+	t operator()() {
+		if (!has_value) throw std::runtime_error("Optional is empty!");
+		return value;
+	}
+};
 
 // Lexer.
 
@@ -24,8 +47,8 @@ struct lexeme {
 		error,
 		nothing,
 	} tag;
-	union {
-		char *word;
+	struct {
+		std::string word;
 		lex_error::type error;
 	} value;
 };
@@ -41,10 +64,9 @@ struct lex_state {
 };
 
 struct message {
-	char *prefix;
-	char *command;
-	char **params;
-	int params_count;
+	optional<std::string> prefix;
+	std::string command;
+	std::vector<std::string> params;
 };
 
 namespace parse_error {
@@ -59,15 +81,10 @@ struct parseme {
 		message,
 		error,
 	} tag;
-	union {
+	struct {
 		::message message;
 		parse_error::type error;
 	} value;
-};
-
-template <class t> struct optional {
-	t value;
-	bool has_value;
 };
 
 struct parse_state {
@@ -76,11 +93,8 @@ struct parse_state {
 };
 
 lexeme lex(char c, lex_state *l);
-std::vector<lexeme> lex_string(const char *string, lex_state *state);
+std::vector<lexeme> lex_string(std::string string, lex_state *state);
 void print_message(message m);
-parseme parse(lexeme l, parse_state *p);
+parseme parse(lexeme l, parse_state &p);
 std::vector<parseme> parse_lexeme_string(std::vector<lexeme> lexemes,
-					 parse_state *state);
-void freeParseme(parseme p);
-void freeLexeme(lexeme l);
-void freeMessage(message& m);
+					 parse_state &state);

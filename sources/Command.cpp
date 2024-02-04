@@ -1,13 +1,13 @@
 #include "Command.hpp"
 
-Base2::Base2(Server *s, bool auth) : server(s), is_auth(auth) {}
+Command::Command(Server *s, bool auth) : server(s), is_auth(auth) {}
 
-Base2::~Base2() {}
+Command::~Command() {}
 
-bool Base2::isAuthenticationRequired() const { return is_auth; }
+bool Command::isAuthenticationRequired() const { return is_auth; }
 
 // PASS
-Pass::Pass(Server *server, bool auth) : Base2(server, auth) {}
+Pass::Pass(Server *server, bool auth) : Command(server, auth) {}
 
 Pass::~Pass() {}
 
@@ -34,7 +34,7 @@ void Pass::execute(Client &client, std::vector<std::string> args) {
 }
 
 // JOIN
-Join::Join(Server *server, bool auth) : Base2(server, auth) {}
+Join::Join(Server *server, bool auth) : Command(server, auth) {}
 
 Join::~Join() {}
 
@@ -85,7 +85,7 @@ void Join::execute(Client &client, std::vector<std::string> args) {
 
 // NICK
 
-Nick::Nick(Server *server, bool auth) : Base2(server, auth) {}
+Nick::Nick(Server *server, bool auth) : Command(server, auth) {}
 
 Nick::~Nick() {}
 
@@ -121,7 +121,7 @@ void Nick::execute(Client &client, std::vector<std::string> args) {
 }
 
 // USER
-User::User(Server *server, bool auth) : Base2(server, auth) {}
+User::User(Server *server, bool auth) : Command(server, auth) {}
 
 User::~User() {}
 
@@ -152,7 +152,7 @@ void User::execute(Client &client, std::vector<std::string> args) {
 // USER guest FDGDFGD SGSGSDGF John Doe
 
 // QUIT
-Quit::Quit(Server *server, bool auth) : Base2(server, auth) {}
+Quit::Quit(Server *server, bool auth) : Command(server, auth) {}
 
 Quit::~Quit() {}
 
@@ -166,7 +166,7 @@ void Quit::execute(Client &client, std::vector<std::string> args) {
 
 // MODE
 
-Mode::Mode(Server *server, bool auth) : Base2(server, auth) {}
+Mode::Mode(Server *server, bool auth) : Command(server, auth) {}
 Mode::~Mode() {}
 
 void Mode::execute(Client &client, std::vector<std::string> args) {
@@ -343,7 +343,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 }
 
 // topic
-Topic::Topic(Server *server, bool auth) : Base2(server, auth) {}
+Topic::Topic(Server *server, bool auth) : Command(server, auth) {}
 
 Topic::~Topic() {}
 
@@ -390,7 +390,7 @@ void Topic::execute(Client &client, std::vector<std::string> args) {
 
 // Ping
 
-Ping::Ping(Server *server, bool auth) : Base2(server, auth) {}
+Ping::Ping(Server *server, bool auth) : Command(server, auth) {}
 
 Ping::~Ping() {}
 
@@ -406,7 +406,7 @@ void Ping::execute(Client &client, std::vector<std::string> args) {
 
 // PrivMsg
 
-PrivMsg::PrivMsg(Server *server, bool auth) : Base2(server, auth) {}
+PrivMsg::PrivMsg(Server *server, bool auth) : Command(server, auth) {}
 
 PrivMsg::~PrivMsg() {}
 
@@ -471,7 +471,7 @@ void PrivMsg::execute(Client &client, std::vector<std::string> args) {
 
 // Pong
 
-Pong::Pong(Server *server, bool auth) : Base2(server, auth) {}
+Pong::Pong(Server *server, bool auth) : Command(server, auth) {}
 
 Pong::~Pong() {}
 
@@ -487,7 +487,7 @@ void Pong::execute(Client &client, std::vector<std::string> args) {
 
 // Kick
 
-Kick::Kick(Server *server, bool auth) : Base2(server, auth) {}
+Kick::Kick(Server *server, bool auth) : Command(server, auth) {}
 
 Kick::~Kick() {}
 
@@ -544,7 +544,7 @@ void Kick::execute(Client &client, std::vector<std::string> args) {
 
 // Invite
 
-Invite::Invite(Server *server, bool auth) : Base2(server, auth) {}
+Invite::Invite(Server *server, bool auth) : Command(server, auth) {}
 
 Invite::~Invite() {}
 
@@ -608,7 +608,7 @@ void Invite::execute(Client &client, std::vector<std::string> args) {
 
 // Part
 
-Part::Part(Server *server, bool auth) : Base2(server, auth) {}
+Part::Part(Server *server, bool auth) : Command(server, auth) {}
 
 Part::~Part() {}
 
@@ -633,7 +633,7 @@ void Part::execute(Client &client, std::vector<std::string> args) {
 }
 
 // who
-Who::Who(Server *server, bool auth) : Base2(server, auth) {}
+Who::Who(Server *server, bool auth) : Command(server, auth) {}
 
 Who::~Who() {}
 
@@ -677,7 +677,8 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 	    IRCResponse::RPL_ENDOFWHO(client.nick_name, args[0]));
 }
 
-Cap::Cap(Server *server, bool auth) : Base2(server, auth) {}
+// Buggy?
+Cap::Cap(Server *server, bool auth) : Command(server, auth) {}
 
 Cap::~Cap() {}
 
