@@ -59,3 +59,21 @@ Secret knowledge
 
 [ ] Can there be client duplicates?
 [ ] What's the identity? Currently it is a pointer. Should be some other name?
+[ ] Delete all delete and free (and new and malloc).
+[ ] What to do on zero read?
+[ ] Should bare "QUIT\n" do something?
+[ ] Memory leaks on ^D?
+[ ] ./irvsev 4201337
+[ ] 557c57e ??? Without SOH bad.
+
+# Lexer and parser.
+
+[ ] Don't recv in a loop.
+	[ ] Hold parser and lexer objects inside of client.
+
+[ ] Don't use char *and delete and free. Don't use pointers.
+[ ] What to do
+	if (word.size() == 0) {
+		return (parseme){.tag = parseme::nothing};
+	}
+[ ] Replace .tag = error with try and catch.
