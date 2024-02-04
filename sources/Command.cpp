@@ -161,6 +161,7 @@ void Quit::execute(Client &client, std::vector<std::string> args) {
 	client.respondWithPrefix(
 	    IRCResponse::RPL_QUIT(client.getPrefix(), reason));
 	server->disconnectClient(client.fd);
+	throw pollfd_iterator_invalidated();
 }
 
 // MODE

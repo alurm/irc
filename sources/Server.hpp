@@ -21,6 +21,8 @@
 struct Channel;
 struct Client;
 
+struct pollfd_iterator_invalidated : std::exception {};
+
 struct Server {
 	const std::string port;
 	const std::string pass;

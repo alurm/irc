@@ -83,25 +83,29 @@ void Server::connect_client() {
 	std::cout << message;
 }
 
+int my_close(int fd) {
+	int result = close(fd);
+	if (result == -1) throw std::runtime_error("Close failed!");
+	return result;
+}
+
 void Server::disconnectClient(int fd) {
-	std::map<int, Client>::iterator client = clients.find(fd);
-	if (client != clients.end()) {
-		client->second.handleChannelLeave();
-		char message[1000];
-		sprintf(message, "%s:%d has disconnected!",
-			client->second.host_name.c_str(), client->second.port);
-		std::cout << message << std::endl;
-		clients.erase(fd);
-		std::vector<pollfd>::iterator it_b = fds.begin();
-		std::vector<pollfd>::iterator it_e = fds.end();
-		while (it_b != it_e) {
-			if (it_b->fd == fd) {
-				it_b = fds.erase(it_b);
-				close(fd);
-				break;
-			} else {
-				++it_b;
-			}
+	Client &client = clients.at(fd);
+	client.handleChannelLeave();
+	char message[1000];
+	sprintf(message, "%s:%d has disconnected!", client.host_name.c_str(),
+		client.port);
+	std::cout << message << std::endl;
+	clients.erase(fd);
+	std::vector<pollfd>::iterator it_b = fds.begin();
+	std::vector<pollfd>::iterator it_e = fds.end();
+	while (it_b != it_e) {
+		if (it_b->fd == fd) {
+			it_b = fds.erase(it_b);
+			my_close(fd);
+			break;
+		} else {
+			++it_b;
 		}
 	}
 }
@@ -150,8 +154,7 @@ struct message Server::get_client_message(int fd) {
 						trimmedMessage.replace(pos, 1,
 								       "\r\n");
 						pos = trimmedMessage.find(
-						    '\n',
-						    pos + 2);
+						    '\n', pos + 2);
 					}
 				}
 				lex_state lexerState = {
@@ -217,27 +220,39 @@ void Server::start() {
 			throw std::runtime_error(
 			    "Error while polling from fds!");
 
-		for (std::vector<pollfd>::iterator it = fds.begin();
-		     it != fds.end(); ++it) {
-			if (it->revents & POLLHUP) {
-				// system("leaks ircserv");
-				disconnectClient(it->fd);
-				break;
-			}
+		while (true) {
+			try {
+				for (std::vector<pollfd>::iterator it =
+					 fds.begin();
+				     it != fds.end(); ++it) {
+					if (it->revents & POLLHUP) {
+						it->revents &= ~POLLHUP;
+						// system("leaks ircserv");
+						disconnectClient(it->fd);
+						throw pollfd_iterator_invalidated();
+					}
 
-			if (it->revents & POLLIN) {
-				if (it->fd == sock.value) {
+					if (it->revents & POLLIN) {
+						it->revents &= ~POLLIN;
+
+						if (it->fd == sock.value) {
+							// system("leaks
+							// ircserv");
+							connect_client();
+							throw pollfd_iterator_invalidated();
+						} else {
+							handle_client_message(
+							    it->fd);
+						}
+					}
 					// system("leaks ircserv");
-					connect_client();
-					break;
-				} else {
-					handle_client_message(it->fd);
+					// std::cout <<
+					// ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
 				}
+				break;
+			} catch (pollfd_iterator_invalidated) {
 			}
-			// system("leaks ircserv");
 		}
-		std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
-		// system("leaks ircserv");
 	}
 }
 

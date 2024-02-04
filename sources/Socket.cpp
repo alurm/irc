@@ -9,5 +9,5 @@ Socket::Socket(int domain, int type, int protocol) {
 }
 
 Socket::~Socket() {
-	close(value);
+	my_close(value);
 }
