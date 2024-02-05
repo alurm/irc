@@ -15,10 +15,14 @@ struct Client {
 	int fd;
 	int port;
 
+	parse_state parser;
+	lex_state lexer;
+
 	std::string nick_name;
 	std::string user_name;
 	std::string host_name;
 	std::string real_name;
+
 	Channel *chan;
  	client_state::ClientState status;
 	Client(int fd, int port, const std::string &hostname);

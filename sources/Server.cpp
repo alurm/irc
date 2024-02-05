@@ -110,93 +110,40 @@ void Server::disconnectClient(int fd) {
 	}
 }
 
-struct message Server::get_client_message(int fd) {
-	(void)fd;
-	struct message m;
-	assert(0);
-	// std::string receivedData;
+struct std::vector<message> Server::get_client_message(int fd) {
+	char buffer[1024 + 1];
 
-	// while (true) {
-	// 	char buffer[1024];
-	// 	int bytesRead;
+	int bytesRead = read(fd, buffer, 1024);
 
-	// 	bytesRead = recv(fd, buffer, sizeof(buffer), 0);
-	// 	if (bytesRead < 0 && errno != EWOULDBLOCK) {
-	// 		std::cout
-	// 		    << "Error occurred during recv: " << strerror(errno)
-	// 		    << std::endl;
-	// 		throw std::runtime_error(
-	// 		    "Error while reading buffer from a client!");
-	// 	} else if (bytesRead == 0) {
-	// 		disconnectClient(fd);
-	// 		throw std::runtime_error(
-	// 		    "Connection closed by the client");
-	// 	}
+	buffer[bytesRead] = 0;
 
-	// 	if (bytesRead > 0) {
-	// 		receivedData.append(buffer, bytesRead);
-	// 		size_t pos = receivedData.find("\n");
-	// 		if (pos != std::string::npos) {
-	// 			std::string completeMessage =
-	// 			    receivedData.substr(0, pos + 1);
-	// 			receivedData.erase(0, pos + 1);
-	// 			std::stringstream ss(completeMessage);
-	// 			std::string syntax;
-	// 			std::string trimmedMessage =
-	// 			    trim(completeMessage);
-	// 			if (!endsWithCRLF(trimmedMessage)) {
-	// 				// trimmedMessage += "\r\n";
-	// 				size_t pos = trimmedMessage.find('\n');
+	if (bytesRead < 0)
+		throw std::runtime_error(
+			"Error while reading buffer from a client!");
 
-	// 				while (pos != std::string::npos) {
-	// 					trimmedMessage.replace(pos, 1,
-	// 							       "\r\n");
-	// 					pos = trimmedMessage.find(
-	// 					    '\n', pos + 2);
-	// 				}
-	// 			}
-	// 			lex_state lexerState = {
-	// 			    .state = lex_state::in_word,
-	// 			    .word = "",
-	// 			    .in_trailing = false,
-	// 			};
-	// 			std::vector<lexeme> lexemes = lex_string(
-	// 			    trimmedMessage.c_str(), &lexerState);
-	// 			parse_state parserState = {
-	// 			    .prefix = optional<std::string>(),
-	// 			};
-	// 			std::vector<parseme> parsedMessages =
-	// 			    parse_lexeme_string(lexemes, &parserState);
-	// 			if (!parsedMessages.empty()) {
-	// 				for (size_t i = 0;
-	// 				     i < parsedMessages.size(); i++) {
-	// 					if (parsedMessages[i].tag ==
-	// 					    parseme::message) {
-	// 						m = parsedMessages[i]
-	// 							.value.message;
-	// 					}
-	// 				}
-	// 			}
-	// 			for (std::vector<lexeme>::iterator it =
-	// 				 lexemes.begin();
-	// 			     it != lexemes.end(); it++) {
-	// 			}
-	// 			// std::cout << "trimmedMessage is "
-	// 			// 	  << trimmedMessage << std::endl;
-	// 			return m;
-	// 		}
-	// 	}
-	// }
+	Client &c = clients.at(fd);
+
+	try {
+		std::vector<lexeme> lexemes = lex_string(buffer, c.lexer);
+		std::vector<message> messages = parse_lexeme_string(lexemes, c.parser);
+		for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++) {
+			print_message(*it);
+			std::cout << std::endl;
+		}
+		return messages;
+	} catch (parsing_error) {
+		disconnectClient(fd);
+		throw pollfd_iterator_invalidated();
+	}
 }
 
 void Server::handle_client_message(int fd) {
 	if (clients.count(fd) > 0) {
 		Client &client = clients.at(fd);
-		optional<message> optional_message = this->get_client_message(fd);
+		std::vector<message> messages = get_client_message(fd);
 
-		if (optional_message.has_value) {
-			dispatch(client, optional_message());
-		}
+		for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++)
+			dispatch(client, *it);
 	}
 }
 

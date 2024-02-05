@@ -40,7 +40,7 @@ struct Server {
 	void disconnectClient(int fd);
 	void connect_client();
 	void handle_client_message(int fd);
-	struct message get_client_message(int fd);
+	struct std::vector<message> get_client_message(int fd);
 	void dispatch(Client &c, message m);
 	Client *getClient(const std::string &nickname);
 	Channel *getChannel(const std::string &name);
