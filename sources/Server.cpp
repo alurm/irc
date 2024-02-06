@@ -233,7 +233,7 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 void Server::dispatch(Client &c, message m) {
 	Command *command = NULL;
 
-	// std::cout << "Command is " << m.command << std::endl;
+	//  << "Command is " << m.command << std::endl;
 	if (m.command == "PASS") {
 		command = new Pass(this, false);
 	} else if (m.command == "JOIN") {
