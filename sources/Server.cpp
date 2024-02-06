@@ -126,10 +126,10 @@ struct std::vector<message> Server::get_client_message(int fd) {
 	try {
 		std::vector<lexeme> lexemes = lex_string(buffer, c.lexer);
 		std::vector<message> messages = parse_lexeme_string(lexemes, c.parser);
-		for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++) {
-			print_message(*it);
-			std::cout << std::endl;
-		}
+		// for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++) {
+			// print_message(*it);
+			// std::cout << std::endl;
+		// }
 		return messages;
 	} catch (parsing_error) {
 		disconnectClient(fd);
@@ -231,10 +231,9 @@ Channel *Server::addChannel(const std::string &name, const std::string &key,
 }
 
 void Server::dispatch(Client &c, message m) {
-
 	Command *command = NULL;
 
-	std::cout << "Command is " << m.command << std::endl;
+	// std::cout << "Command is " << m.command << std::endl;
 	if (m.command == "PASS") {
 		command = new Pass(this, false);
 	} else if (m.command == "JOIN") {
@@ -250,11 +249,11 @@ void Server::dispatch(Client &c, message m) {
 	} else if (m.command == "TOPIC") {
 		command = new Topic(this, true);
 	} else if (m.command == "PING") {
-		command = new Ping(this, true);
+		command = new Ping(this, false);
 	} else if (m.command == "PRIVMSG") {
 		command = new PrivMsg(this, true);
 	} else if (m.command == "PONG") {
-		command = new Pong(this, true);
+		command = new Pong(this, false);
 	} else if (m.command == "KICK") {
 		command = new Kick(this, true);
 	} else if (m.command == "INVITE") {

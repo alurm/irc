@@ -46,6 +46,7 @@ if (client) {
 		client->chan = 0;
 		if (!clients.empty()) {
 			admin = clients[0];
+			operators.push_back(clients[0]);
 			admin->sendWithLineEnding(IRCResponse::RPL_MSG(admin->getPrefix(), "", name, "you are the new admin"));
 			std::string message =
 			    client->nick_name +
