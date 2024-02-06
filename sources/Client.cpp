@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 Client::Client(int fd, int port, const std::string &hostname)
-    : fd(fd), port(port), host_name(hostname), chan(NULL),
+    : fd(fd), port(port), input_buffer_offset(0), output_buffer_offset(0), state(reading), host_name(hostname), chan(NULL),
       status(client_state::HANDSHAKE) {}
 
 Client::~Client() {}
@@ -21,16 +21,13 @@ std::string Client::getPrefix() const {
 	return nick_name + username + hostname;
 }
 
-void Client::sendWithLineEnding(const std::string &message) const {
+void Client::sendWithLineEnding(const std::string &message) {
 	std::string buffer = message + "\r\n";
-	const char *data = buffer.c_str();
-	int length = buffer.length();
+	// const char *data = buffer.c_str();
+	// int length = buffer.length();
 
-	int sentBytes = send(fd, data, length, 0);
-	if (sentBytes < 0 || sentBytes != length) {
-		throw std::runtime_error(
-		    "Error while sending a message to a client!");
-	}
+	output_buffer.append(buffer);
+	state = writing;
 }
 
 void Client::respondWithPrefix(const std::string &message) {
@@ -109,7 +106,6 @@ void Client::handleChannelLeave() {
 		chan->sendAll(IRCResponse::RPL_PART(prefix, chan->name));
 	}
 
-	// Buggy. This is nil.
 	std::string message = nick + " has left the channel " + name;
 	std::cout << message << std::endl;
 
@@ -122,4 +118,31 @@ Client *Channel::getClientByNick(std::string nickname) {
 			return *it;
 
 	return NULL;
+}
+
+optional<message> Client::optional_message() {
+	if (input_buffer == "") {
+		char buffer[1024];
+		ssize_t bytesRead = recv(fd, buffer, 1024, 0);
+		if (bytesRead < 0)
+		throw std::runtime_error(
+			"Error while reading buffer from a client!");
+
+		input_buffer.append(buffer, bytesRead);
+	}
+
+	while (input_buffer_offset != input_buffer.size()) {
+		std::vector<lexeme> lexemes = lex(input_buffer[input_buffer_offset], lexer);
+		input_buffer_offset++;
+		for (std::vector<lexeme>::iterator it = lexemes.begin(); it != lexemes.end(); it++) {
+			optional<message> optional_message = parse(*it, parser);
+			if (optional_message.has_value) {
+				return optional_message;
+			}
+		}
+	}
+
+	input_buffer = std::string();
+	input_buffer_offset = 0;
+	return optional<message>();
 }

@@ -35,6 +35,7 @@ struct Server {
 	std::vector<Channel *> channels;
 
 	Server(const std::string &port, const std::string &pass);
+	~Server();
 	int initializeSocket();
 	void start();
 	void disconnectClient(int fd);

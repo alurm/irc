@@ -9,7 +9,6 @@ namespace client_state {
         DISCONNECTED
     };
 
-    // Buggy?
     extern ClientState state;
 }
 

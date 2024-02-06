@@ -32,7 +32,6 @@ void Channel::sendAll(const std::string &message) {
 void Channel::handleClientRemoval(Client *client) {
 	client_iterator it = clients.begin();
 
-	// Buggy?
 	while (it != clients.end()) {
 		if (*it == client) {
 			it = clients.erase(it);
@@ -99,13 +98,11 @@ void Channel::kick(Client &client, Client &target, const std::string &reason) {
 	std::cout << message << std::endl;
 }
 
-// Buggy?
 void Channel::removeClient(Client &client) {
 	client_iterator it_b = clients.begin();
 	client_iterator it_e = clients.end();
 
 	while (it_b != it_e) {
-		// Buggy?
 		if (*it_b == &client) clients.erase(it_b);
 
 		it_b++;
@@ -153,7 +150,6 @@ void     Channel::broadcast(const std::string& message)
     }
 }
 
-// Buggy?
 bool Channel::channelIsFull(void)
 {
     if (limit == 0)
@@ -166,7 +162,6 @@ void Channel::replyWho(Client &client, int mode)
 {
     for(size_t i = 0; i < clients.size(); ++i)
     {
-    	// Buggy: what is "H"?
         std::string reply = IRCResponse::RPL_WHOREPLY(
         	client.nick_name, name,
         	clients[i]->user_name, clients[i]->host_name,

@@ -26,7 +26,6 @@ struct Channel {
 	void sendAll(const std::string &message);
 	std::vector<std::string> getNicknames();
 	Channel(const std::string &name, const std::string &key, Client &admin);
-	~Channel();
 	void handleClientRemoval(Client *client);
 	bool isInChannel(Client &channel);
 	bool isOperator(Client &client);

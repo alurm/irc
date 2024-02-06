@@ -74,7 +74,6 @@ void Join::execute(Client &client, std::vector<std::string> args) {
 		return;
 	}
 
-	// Buggy?
 	if (channel->key != pass) {
 		client.respondWithPrefix(IRCResponse::ERR_BADCHANNELKEY(
 		    client.nick_name, name));
@@ -158,8 +157,11 @@ Quit::~Quit() {}
 
 void Quit::execute(Client &client, std::vector<std::string> args) {
 	std::string reason = args.empty() ? "Leaving..." : args.at(0);
-	client.respondWithPrefix(
-	    IRCResponse::RPL_QUIT(client.getPrefix(), reason));
+
+	std::string buffer = ":" + client.getPrefix() + " " + IRCResponse::RPL_QUIT(client.getPrefix(), reason) + "\r\n";
+
+	int sentBytes = send(client.fd, buffer.c_str(), buffer.size(), 0);
+
 	server->disconnectClient(client.fd);
 	throw pollfd_iterator_invalidated();
 }
@@ -275,7 +277,7 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 						client.nick_name, nickname, channel_name
 					)
 				);
-				return; // Buggy?
+				return;
 			}
 			Client &cli = *target_pointer;
 
@@ -320,12 +322,6 @@ void Mode::execute(Client &client, std::vector<std::string> args) {
 					return;
 				}
 				channel->limit = new_limit;
-			} else {
-				// Buggy?
-				//
-				// Unlimit in my case default is 10.
-				// ?????????
-				channel->limit = 0;
 			}
 
 			client.respondWithPrefix(
@@ -514,7 +510,7 @@ void Kick::execute(Client &client, std::vector<std::string> args) {
 		}
 	}
 	Channel *channel = client.chan;
-	// Buggy?
+
 	if (!channel || channel->name != name) {
 		client.respondWithPrefix(
 		    IRCResponse::ERR_NOTONCHANNEL(client.nick_name, name));
@@ -563,7 +559,7 @@ void Invite::execute(Client &client, std::vector<std::string> args) {
 		client.respondWithPrefix(
 			IRCResponse::ERR_NOSUCHNICK(client.nick_name, nickName)
 		);
-		return; // Buggy?
+		return;
 	}
 
 	Client &cli = *target_pointer;
@@ -677,7 +673,6 @@ void Who::execute(Client &client, std::vector<std::string> args) {
 	    IRCResponse::RPL_ENDOFWHO(client.nick_name, args[0]));
 }
 
-// Buggy?
 Cap::Cap(Server *server, bool auth) : Command(server, auth) {}
 
 Cap::~Cap() {}
@@ -685,4 +680,5 @@ Cap::~Cap() {}
 void Cap::execute(Client &client, std::vector<std::string> args) {
 	(void) client;
 	(void) args;
+
 }

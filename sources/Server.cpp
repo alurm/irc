@@ -62,7 +62,7 @@ void Server::connect_client() {
 			    "Error while accepting a new client!");
 	}
 
-	pollfd pfd = {.fd = fd, .events = POLLIN};
+	pollfd pfd = {.fd = fd, .events = POLLIN | POLLOUT};
 	fds.push_back(pfd);
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
 		throw std::runtime_error(
@@ -110,40 +110,16 @@ void Server::disconnectClient(int fd) {
 	}
 }
 
-struct std::vector<message> Server::get_client_message(int fd) {
-	char buffer[1024 + 1];
-
-	int bytesRead = read(fd, buffer, 1024);
-
-	buffer[bytesRead] = 0;
-
-	if (bytesRead < 0)
-		throw std::runtime_error(
-			"Error while reading buffer from a client!");
-
-	Client &c = clients.at(fd);
-
+void Server::handle_client_message(int fd) {
+	Client &client = clients.at(fd);
 	try {
-		std::vector<lexeme> lexemes = lex_string(buffer, c.lexer);
-		std::vector<message> messages = parse_lexeme_string(lexemes, c.parser);
-		// for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++) {
-			// print_message(*it);
-			// std::cout << std::endl;
-		// }
-		return messages;
+		optional<message> optional_message = clients.at(fd).optional_message();
+		if (optional_message.has_value) {
+			dispatch(client, optional_message());
+		}
 	} catch (parsing_error) {
 		disconnectClient(fd);
 		throw pollfd_iterator_invalidated();
-	}
-}
-
-void Server::handle_client_message(int fd) {
-	if (clients.count(fd) > 0) {
-		Client &client = clients.at(fd);
-		std::vector<message> messages = get_client_message(fd);
-
-		for (std::vector<message>::iterator it = messages.begin(); it != messages.end(); it++)
-			dispatch(client, *it);
 	}
 }
 
@@ -162,10 +138,10 @@ void Server::start() {
 			try {
 				for (std::vector<pollfd>::iterator it =
 					 fds.begin();
-				     it != fds.end(); ++it) {
+				     it != fds.end(); ++it)
+				{
 					if (it->revents & POLLHUP) {
 						it->revents &= ~POLLHUP;
-						// system("leaks ircserv");
 						disconnectClient(it->fd);
 						throw pollfd_iterator_invalidated();
 					}
@@ -174,26 +150,38 @@ void Server::start() {
 						it->revents &= ~POLLIN;
 
 						if (it->fd == sock.value) {
-							// system("leaks
-							// ircserv");
 							connect_client();
 							throw pollfd_iterator_invalidated();
-						} else {
-							handle_client_message(
-							    it->fd);
 						}
+
+						Client &c = clients.at(it->fd);
+
+						if (c.state == Client::reading) handle_client_message(it->fd);
 					}
 
-					// if (it->revents & POLLOUT) {
-					// 	it->revents &= ~POLLOUT;
-						
-					// 	// ...
-					// 	assert(0);
-					// }
+					if (it->revents & POLLOUT) {
+						it->revents &= ~POLLOUT;
 
-					// system("leaks ircserv");
-					// std::cout <<
-					// ">>>>>>>>>>>>>>>>>>>>>>>>>>\n";
+						int fd = it->fd;
+						Client &c = clients.at(fd);
+
+						if (c.state == Client::writing) {
+							int sentBytes = send(fd, c.output_buffer.c_str(), c.output_buffer.size(), 0);
+
+							if (sentBytes < 0) {
+								disconnectClient(fd);
+								throw pollfd_iterator_invalidated();
+							}
+
+							c.output_buffer_offset += sentBytes;
+							if (c.output_buffer_offset == c.output_buffer.size()) {
+								c.output_buffer = std::string();
+								c.output_buffer_offset = 0;
+								c.state = Client::reading;
+							}
+
+						}
+					}
 				}
 				break;
 			} catch (pollfd_iterator_invalidated) {
@@ -274,7 +262,6 @@ void Server::dispatch(Client &c, message m) {
 		return;
 	}
 
-	// Buggy?
 	if (c.status != client_state::REGISTERED &&
 	    command->isAuthenticationRequired()) {
 		c.respondWithPrefix(
@@ -314,5 +301,12 @@ void Server::updateNicknameInChannels(const std::string &oldNickname,
 				channelOps[j]->nick_name = newNickname;
 			}
 		}
+	}
+}
+
+Server::~Server() {
+
+	for (std::vector<Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+		delete *it;
 	}
 }

@@ -18,6 +18,17 @@ struct Client {
 	parse_state parser;
 	lex_state lexer;
 
+	std::string input_buffer;
+	size_t input_buffer_offset;
+
+	std::string output_buffer;
+	size_t output_buffer_offset;
+
+	enum {
+		reading,
+		writing,
+	} state;
+
 	std::string nick_name;
 	std::string user_name;
 	std::string host_name;
@@ -32,9 +43,11 @@ struct Client {
 
 	/* Send and receive */
 
-	void sendWithLineEnding(const std::string &message) const;
+	void sendWithLineEnding(const std::string &message);
 	void respondWithPrefix(const std::string &message);
 	void sendWelcomeMessage();
+
+	optional<message> optional_message();
 
 	/* Client Actions */
 

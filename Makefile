@@ -25,9 +25,10 @@ re :
 
 .DEFAULT_GOAL := $(NAME)
 
-cpp_flags := -std=c++98 -W{all,extra,error} #-g -fsanitize=undefined -ferror-limit=1
+cpp_flags := -std=c++98 -W{all,extra,error}
 
-# Useless.
+# -g -fsanitize=undefined -ferror-limit=1
+
 objects/test : $(addprefix objects/, $(addsuffix .o, test parse)) Makefile
 	c++ $(cpp_flags) $(filter %.o, $^) -o $@
 

@@ -32,22 +32,28 @@ std::vector<lexeme> lex(char c, lex_state &l) {
 	if (c == '\r')
 		return std::vector<lexeme>();
 
-	if (c == 0) throw parsing_error();
+	if (c == 0)
+		throw parsing_error();
 
 	switch (l.state) {
 	case lex_state::in_word:
 		if (c == '\n') {
-			std::string word = l.word;
-			l = lex_state();
-			return pair<lexeme>(
-				(lexeme){
-				.tag = lexeme::word,
-				.value =
-					{
-					.word = word,
+			if (l.word.size() == 0 && !l.in_trailing) {
+				return empty_vector<lexeme>();
+			} else {
+				std::string word = l.word;
+				l = lex_state();
+				return pair<lexeme>(
+					(lexeme){
+					.tag = lexeme::word,
+					.value =
+						{
+						.word = word,
+						},
 					},
-				},
-				terminator);
+					terminator
+				);
+			}
 		} else if (l.in_trailing) {
 			l.word += c;
 			return empty_vector<lexeme>();
@@ -92,7 +98,9 @@ std::vector<lexeme> lex_string(std::string string, lex_state &state) {
 	for (int i = 0; string[i] != 0; i++) {
 		char c = string[i];
 		std::vector<lexeme> l = lex(c, state);
-		for (std::vector<lexeme>::iterator it = l.begin(); it != l.end(); it++) result.push_back(*it);
+		for (std::vector<lexeme>::iterator it = l.begin();
+		     it != l.end(); it++)
+			result.push_back(*it);
 	}
 	return result;
 }
@@ -110,8 +118,8 @@ void print_message(message m) {
 optional<message> parse(lexeme l, parse_state &p) {
 	switch (l.tag) {
 	case lexeme::terminator: {
-		if (p.words.size() == 0) throw parsing_error();
-	
+		// if (p.words.size() == 0) throw parsing_error();
+
 		message m = {
 		    .prefix = p.prefix,
 		    .command = p.words[0],
@@ -127,10 +135,6 @@ optional<message> parse(lexeme l, parse_state &p) {
 	}
 	case lexeme::word: {
 		std::string word = l.value.word;
-
-		if (word.size() == 0)
-			throw std::runtime_error(
-			    "IRC word's size can't be zero!");
 
 		if (word[0] == ':' && p.words.size() == 0) {
 			std::string without_colon = word.substr(1);

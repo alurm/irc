@@ -11,14 +11,10 @@
 struct Client;
 struct Server;
 
-// Buggy?
 class Command {
       protected:
 	Server *server;
 	bool is_auth;
-
-	// Base2();
-	// Base2(const Base2& src);
 
       public:
 	explicit Command(Server *s,  bool auth);
