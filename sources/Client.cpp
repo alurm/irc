@@ -91,10 +91,8 @@ void Client::handleChannelJoin(Channel *channel) {
 	// this->sendWithLineEnding(IRCResponse::RPL_MSG(
 	//     this->getPrefix(), "PRIVMSG", channel->name,
 	//     IRCResponse::RPL_ENDOFNAMES(nick_name, channel->name)));
-	std::cout << "before names list send \n"; 
 	this->sendWithLineEnding(IRCResponse::RPL_NAMREPLY(nick_name, channel->name + static_cast<char>(1), users));
     this->sendWithLineEnding(IRCResponse::RPL_ENDOFNAMES(nick_name, channel->name + static_cast<char>(1)));
-	std::cout << "after names list send \n";	
 	std::string message = nick_name + " has joined the channel " +
 			      channel->name + joinedUsers;
 	std::cout << message << std::endl;
