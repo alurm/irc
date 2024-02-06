@@ -243,8 +243,10 @@ void Server::dispatch(Client &c, message m) {
 	} else if (m.command == "USER") {
 		command = new User(this, false);
 	} else if (m.command == "QUIT") {
-		command = new Quit(this, false);
-	} else if (m.command == "MODE") {
+		Quit quit = Quit(this, false);
+		quit.execute(c, m.params);
+		return;
+	} else if (m.command == "MODE") {  
 		command = new Mode(this, true);
 	} else if (m.command == "TOPIC") {
 		command = new Topic(this, true);
@@ -277,11 +279,13 @@ void Server::dispatch(Client &c, message m) {
 	    command->isAuthenticationRequired()) {
 		c.respondWithPrefix(
 		    IRCResponse::ERR_NOTREGISTERED(c.nick_name));
+		delete command;
 		return;
 	}
 	if (command != NULL) {
 		command->execute(c, m.params);
 	}
+
 	delete command;
 }
 
